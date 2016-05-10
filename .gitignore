@@ -1,0 +1,52 @@
+# PSoC creator
+*.cydsn/CortexM3
+*.cywrk.*
+*.cyprj.*
+*.cycdx
+*.cyfit
+*.cyversion
+*.svd
+*.rpt
+*.uvopt
+*.uvproj
+*_timing.html
+*.cydsn/codegentemp
+*.cydsn/Export
+*.cydsn/Generated_Source/PSoC5/*
+# exceptions
+# !*.cydsn/Generated_Source/PSoC5/*
+Backup/
+
+
+# Object files
+*.o
+*.ko
+*.obj
+*.elf
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Libraries
+*.lib
+*.a
+*.la
+*.lo
+
+# Shared objects (inc. Windows DLLs)
+*.dll
+*.so
+*.so.*
+*.dylib
+
+# Executables
+*.exe
+*.out
+*.app
+*.i*86
+*.x86_64
+*.hex
+
+# Debug files
+*.dSYM/
