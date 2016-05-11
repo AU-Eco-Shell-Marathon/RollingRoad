@@ -15,6 +15,7 @@
 #define RR_radius_reciprocal 13.15789474f
 #define gear 4.3f
 #define RPM_Nm_To_uW 104720 //((2*pi)/60)*10^6
+#define RPM_Nm_To_W 0.104720f
 #define RPM_To_Speed 0.0079587f // m/s
 
 /* [] END OF FILE */

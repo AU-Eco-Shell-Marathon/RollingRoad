@@ -59,41 +59,51 @@ void ReceiveUARTData(void)
                 CyDelay(1);
                 SendUART("1 0 Time ms\n");
                 CyDelay(1);
-                SendUART("1 1 Force N\n");
+                SendUART("1 1 Effect(EL) W\n");
                 CyDelay(1);
-                SendUART("1 2 Voltage V\n");
+                SendUART("1 2 Effect(MEK) W\n");
                 CyDelay(1);
-                SendUART("1 3 Ampere A\n");
+                SendUART("1 3 efficiency procent\n");
                 CyDelay(1);
-                SendUART("1 4 Effect(EL) W\n");
+                SendUART("1 4 Force_set N\n");
                 CyDelay(1);
-                SendUART("1 5 Distance m\n");
+                SendUART("1 5 Force N\n");
                 CyDelay(1);
-                SendUART("1 6 Speed m/s\n");
+                SendUART("1 6 Force_RMS N\n");
                 CyDelay(1);
-                SendUART("1 7 Effect(Mek) W\n");
+                SendUART("1 7 Moment Nm\n");
                 CyDelay(1);
-                SendUART("1 8 efficiency procent\n");
+                SendUART("1 8 Moment_RMS Nm\n");
                 CyDelay(1);
-                SendUART("1 9 Overcurrent\n");
+                SendUART("1 9 distance m\n");
                 CyDelay(1);
-                SendUART("1 10 Force_set (N)\n");
+                SendUART("1 10 Speed m/s\n");
                 CyDelay(1);
-                SendUART("1 11 PIDval\n");
+                SendUART("1 11 V_Motor V\n");
                 CyDelay(1);
-                SendUART("1 12 PIDerr\n");
+                SendUART("1 12 V_Motor_RMS V\n");
                 CyDelay(1);
-                SendUART("1 13 PIDanti_windup\n");
+                SendUART("1 13 A_Motor A\n");
                 CyDelay(1);
-                SendUART("1 14 PIDinput\n");
+                SendUART("1 14 A_Motor_RMS A\n");
                 CyDelay(1);
-                SendUART("1 15 PIDsensor\n");
+                SendUART("1 15 Error bool\n");
                 CyDelay(1);
-                SendUART("1 16 ForceRMS N\n");
+                SendUART("1 16 PID_value NAn\n");
                 CyDelay(1);
-                SendUART("1 17 VoltageRMS V\n");
+                SendUART("1 17 PID_error NAn\n");
                 CyDelay(1);
-                SendUART("1 3 AmpereRMS A\n");
+                SendUART("1 18 PID_antiwindup NAn\n");
+                CyDelay(1);
+                SendUART("1 19 PID_input NAn\n");
+                CyDelay(1);
+                SendUART("1 20 PID_sensor NAn\n");
+                CyDelay(1);
+                SendUART("1 21 Alpha_value_uint16 NAn\n");
+                CyDelay(1);
+                SendUART("1 22 efficiency_RMS procent\n");
+                CyDelay(1);
+                SendUART("1 23 MAX_efficiency_RMS procent\n");
                 CyDelay(1);
                 char buf[50];
                 sprintf(buf, "5 %f %f %f\n",
@@ -104,7 +114,7 @@ void ReceiveUARTData(void)
                 SendUART(buf);
                 
                 isReadyToSend = 1;
-               // CyDelay(100);    HUSK AF OPDATER MED SENESTE PROTOKOL
+               // CyDelay(100);    HUSK AT OPDATER MED SENESTE PROTOKOL
                // SendData((uint8*)"1 2 Voltage Volt\n");
             }
         }
@@ -202,26 +212,31 @@ void SendData (struct data* Data,  float setForce, float PIDinput, float PIDsens
     
     char buf[500];
        
-    sprintf(buf, "3 %lu %f %f %f %f %lu %f %f %f %d %f %f %f %f %f %f %f %f %f\n\r", 
-        Data->time_ms, 
-        MomentToForce(Data->Moment.avg), 
-        Data->V_motor.avg, 
-        Data->A_motor.avg, 
-        Data->P_motor.avg,
-        Data->distance, 
-        RPMToSpeed(Data->RPM.avg), 
-        Data->P_mekanisk.avg, 
+    sprintf(buf, "3 %lu %f %f %f %f %f %f %f %f %lu %f %f %f %f %f %u %f %f %f %f %f %lu %f %f\n\r", 
+        Data->time_ms,                      //Tid (ms)
+        Data->P_motor.avg,                  //effect (P)
+        Data->P_mekanisk.avg,
         Data->efficiency.avg,
+        setForce,                           //set Force (N)
+        MomentToForce(Data->Moment.avg),    //Force (N)
+        MomentToForce(Data->Moment.rms), 
+        Data->Moment.avg,
+        Data->Moment.rms,//Moment (Nm)
+        Data->distance, 
+        RPMToSpeed(Data->RPM.avg),//Moment (Nm)
+        Data->V_motor.avg,
+        Data->V_motor.rms, 
+        Data->A_motor.avg, 
+        Data->A_motor.rms,
         Data->stop,
-        setForce,
         PIDdebug[0],//pidval
         PIDdebug[1], //err
         PIDdebug[2],//antiwindup
         PIDinput, //input
         PIDsensor, //sensor
-        MomentToForce(Data->Moment.rms), 
-        Data->V_motor.rms, 
-        Data->A_motor.rms
+        (uint32)Data->Alpha,
+        Data->efficiency.rms,
+        Data->maxRMS
     );
     SendUART(buf);
     /*

@@ -31,7 +31,7 @@ void DMA_setup_DelSig();
 static char calibrate_ = 0;
 
 float maxEfficiencyRMS = 1.0; 
-uint16 Alpha_ = 0xFFFF;
+uint16 Alpha_ = 0x0FFF;
 int32 y_V_motor = 0,
 y_A_motor = 0,
 y_Moment = 0,
@@ -45,7 +45,7 @@ int32 Moment[N];    int32 Moment_offset  = 0;
 int32 RPM[N];
 volatile uint16 n = 0;
 
-int32 Moment_temp = 0;
+int16 Moment_temp = 0;
 uint32 RPM_Moment_temp = 0;
 
 // Mållinger af RPM
@@ -112,18 +112,24 @@ void DMA_setup_DelSig()
 
 CY_ISR(SAR_ADC_1)
 {
+    RPM_Moment_temp = RPM_temp;
     y_V_motor = (int32)(((int32)Alpha_*ADC_SAR_Seq_1_GetResult16(0) + (int32)(65536u-Alpha_)*y_V_motor)>>16);
-    y_A_motor = 0;
+    y_A_motor = (int32)(((int32)Alpha_*ADC_SAR_Seq_1_GetResult16(1) + (int32)(65536u-Alpha_)*y_A_motor)>>16);
+    y_Moment = (int32)(((int32)Alpha_*Moment_temp + (int32)(65536u-Alpha_)*y_Moment)>>16);
+    y_RPM = (int32)(((int32)Alpha_*RPM_Moment_temp + (int32)(65536u-Alpha_)*y_RPM)>>16);
     
     if(n == N)
         return;
     
-    V_motor[n]=ADC_SAR_Seq_1_GetResult16(0) - V_motor_offset;
-    A_motor[n]=ADC_SAR_Seq_1_GetResult16(1) - A_motor_offset;
+    //V_motor[n]=(int32)ADC_SAR_Seq_1_GetResult16(0) - V_motor_offset;
+    //A_motor[n]=(int32)ADC_SAR_Seq_1_GetResult16(1) - A_motor_offset;
     
-    RPM_Moment_temp = RPM_temp;
+    V_motor[n]=y_V_motor - V_motor_offset;
+    A_motor[n]=y_A_motor - A_motor_offset;
     
-    Moment[n]=Moment_temp - Moment_offset;
+    
+    //Moment[n]=Moment_temp - Moment_offset;
+    Moment[n]=y_Moment - Moment_offset;
     RPM[n]=RPM_Moment_temp;
     
     n++;
@@ -192,6 +198,7 @@ CY_ISR(RPM_isr)
 
 void sensor_init(int32 VM, int32 AM, int32 moment, int32 AG)
 {
+    setSNRdB(50.0f);
     DMA_setup_DelSig();
     
     V_motor_offset = VM;
@@ -242,9 +249,10 @@ void sensor_calibrate(int32* VM, int32* AM, int32* moment, int32* AG)
     
     
     //n = 0;
-    while(n != N);
-//        __asm__ __volatile__("nop;"); // for tvinge den til at blive ved med at tjekke om n != N! fejlen kommer nok af at før while bliver n sat til 0.
-    
+    while(n != N)
+    {
+        __asm__ __volatile__("nop;"); // for tvinge den til at blive ved med at tjekke om n != N! fejlen kommer nok af at før while bliver n sat til 0.
+    }
     uint16 i;
     
     int32 AVG[4] = {V_motor[0],A_motor[0],Moment[0], A_generator_sum/A_generator_samples};
@@ -293,41 +301,45 @@ char getData(struct data * Data)
     uint16 i;
     for(i = 0; i < N; i++)
     {
-        P_motor[i] = (V_motor[i]/1000)*(CountToAmp(A_motor[i])/1000);  //Brug af shift istedet vil koste 4.63% // uWatt
-        P_mekanisk[i] = ((Moment[i]/1000)*((RPM[i]*RPM_Nm_To_uW)/1000))/1000; //uWatt
-        efficiency[i] = (P_mekanisk[i]*1000)/P_motor[i] ; //promille
+        P_motor[i] = (int32)(((int64)V_motor[i]*(int64)A_motor[i])/1000000);  //Brug af shift istedet vil koste 4.63% // uWatt
+        P_mekanisk[i] = (int32)(((((int64)Moment[i]*(int64)RPM[i])/1000000) * ((int64)RPM_Nm_To_uW))/1000); //uWatt
+        efficiency[i] = (int32)(((int64)P_mekanisk[i]*1000)/P_motor[i]) ; //promille
     }
 
     calcSamples(V_motor, n, &Data->V_motor, 1000000);
     calcSamples(A_motor, n, &Data->A_motor, 1000000);
     calcSamples(Moment, n, &Data->Moment, 1000000);
     calcSamples(RPM, n, &Data->RPM, 1000);
-    /*
+    
     calcSamples(P_motor, n, &Data->P_motor, 1000000);
     calcSamples(P_mekanisk, n, &Data->P_mekanisk, 1000000);
     
     calcSamples(efficiency, n, &Data->efficiency, 10); // udprinter i procent.
-    */
+    
+    /* snyde koder ;)
     Data->P_motor.avg = Data->V_motor.avg*Data->A_motor.avg;
     Data->P_mekanisk.avg = Data->Moment.avg*Data->RPM.avg*0.10472f;
     Data->efficiency.avg = (Data->P_mekanisk.avg*100)/Data->P_motor.avg;
-    
+    */
     Data->distance = (uint32)((2.0f*PI*RR_radius*(float)Counter_1_ReadCounter())/360.0f);
     Data->time_ms = Counter_2_ReadCounter();
     Data->stop = Status_Reg_1_Read()&0b1;
-    
-    
-    if(Data->efficiency.rms < maxEfficiencyRMS)
+    Data->Alpha = Alpha_;
+    Data->maxRMS = maxEfficiencyRMS;
+    //skal ændres
+    /*
+    if(Data->efficiency.rms > maxEfficiencyRMS)
     {
-        Alpha_= (Alpha_ != 0xFFFF ? (Alpha_+1) : (Alpha_));
+        Alpha_= (Alpha_ != 0x0001 ? (Alpha_-1) : (Alpha_));
     }
     else
     {
-        Alpha_= (Alpha_ != 0x0000 ? (Alpha_-1) : (Alpha_));
+        Alpha_= (Alpha_ != 0xFFFE ? (Alpha_+1) : (Alpha_));
     }
-    
+    */
     n=0;
     return 1;
+    
 }
 
 void setSNRdB(float SNRdB)
@@ -386,10 +398,10 @@ void calcSamples(const int32 * values,const uint16 N_sample, struct sample * Sam
     for(i = 0; i < N_sample; i++)
     {
 
-        Sample->rms += (AVG - values[i])^2;
+        Sample->rms += ((int64)values[i] - AVG)^2;
 
     }
-    Sample->rms = Sample->rms/128;
+    Sample->rms = Sample->rms/N_sample;
     if(Sample->rms < 0)
         Sample->rms = 0;
     else

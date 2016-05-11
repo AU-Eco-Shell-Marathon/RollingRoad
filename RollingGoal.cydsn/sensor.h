@@ -37,6 +37,8 @@ struct data
     struct sample P_mekanisk;
     struct sample efficiency;
     uint32 distance;
+    uint16 Alpha;
+    float maxRMS;
     uint32 time_ms;
     char stop;
 };
