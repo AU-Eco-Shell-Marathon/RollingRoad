@@ -1,0 +1,160 @@
+ \section{Signal description}
+The signals and protocols used to communicate between the blocks in Rolling Road are specified in this section.
+
+\textbf{Block :Rolling Road}\\
+Block interface description:
+\begin{itemize}
+	\item \textbf{Supply230:Voltage}\\
+	Direction: [External] $\rightarrow$ [Voltage Adaptor]\\
+	Description: Voltage from the 230 VAC electrical mains.
+	\item \textbf{ExternalMec:Power}\\
+	Direction: [External] $\rightarrow$ [Roll]\\
+	Description: Mechanical power from the vehicle's wheel.
+	\item \textbf{ExternalEl:Power}\\
+	Direction: [External] $\rightarrow$ [Power Sensor]\\
+	Description: Electrical power from the vehicle's battery.
+	\item \textbf{UART}\\
+	Direction: [Control Unit] $\rightarrow$ [External]\\
+	Description: A signal which transmits data to the computer using the UART-protocol.
+\end{itemize}
+	
+\textbf{Block :Voltage Adaptor}\\
+Block interface description:
+\begin{itemize}
+	\item \textbf{Supply230:Voltage}\\
+	Direction: [External] $\rightarrow$ [Voltage Adaptor]\\
+	Description: Voltage from the 230 VAC electrical mains.
+	\item \textbf{Supply12:Voltage}\\
+	Direction: [Voltage Adaptor] $\rightarrow$ [Level Converter] \& [Torque Sensor]\\
+	Description: Converted supply voltage of 12 VDC.
+\end{itemize}
+		
+\textbf{Block :Level Converter}\\
+Block interface description:
+\begin{itemize}
+	\item \textbf{Supply12:Voltage}\\
+	Direction: [Voltage Adaptor] $\rightarrow$ [Level Converter]\\
+	Description: Converted supply voltage of 12 VDC.
+	\item \textbf{Supply5:Voltage}\\
+	Direction: [Level Converter] $\rightarrow$ [Load System] \& [Control Unit]\\
+	Description: Converted supply voltage of 5 VDC.
+\end{itemize}
+			
+\textbf{Block :Torque Sensor}\\
+Block interface description:
+\begin{itemize}
+	\item \textbf{Supply12:Voltage}\\
+	Direction: [Voltage Adaptor] $\rightarrow$ [Torque Sensor]\\
+	Description: Converted supply voltage of 12 VDC.
+	\item \textbf{MecSense:Power}\\
+	Direction: [Roll] $\rightarrow$ [Torque Sensor]\\
+	Description: Mechanical power given by the rotation of the Roll and fed into the Torque Sensor.
+	\item \textbf{MecGen:Power}\\
+	Direction: [Torque Sensor] $\rightarrow$ [Generator]\\
+	Description: Mechanical power after it has been measured by the Torque Sensor.
+	\item \textbf{Torque:Voltage}\\
+	Direction: [Torque Sensor] $\rightarrow$ [Signal Converter]\\
+	Description: An analog signal (-5 V to 5 V) which is proportional to the torque measured by the sensor (-5 Nm to 5 Nm).
+	\item \textbf{Angle:Frequency}\\
+	Direction: [Torque Sensor] $\rightarrow$ [Signal Converter]\\
+	Description: A square-wave signal with a frequency which is proportional to the angular velocity measured by the sensor.
+\end{itemize}
+							
+\textbf{Block :Roll}\\
+Block interface description:
+\begin{itemize}
+	\item \textbf{ExternalMec:Power}\\
+	Direction: [External] $\rightarrow$ [Roll]\\
+	Description: Mechanical power from the vehicle's wheel.
+	\item \textbf{MecSense:Power}\\
+	Direction: [Roll] $\rightarrow$ [Torque Sensor]\\
+	Description: Mechanical power given by the rotation of the Roll and fed into the Torque Sensor.
+\end{itemize}
+					
+\textbf{Block :Generator}\\
+Block interface description:
+\begin{itemize}
+	\item \textbf{MecGen:Power}\\
+	Direction: [Torque Sensor] $\rightarrow$ [Generator]\\
+	Description: Mechanical power after it has been measured by the Torque Sensor.
+	\item \textbf{GenPower:Power}\\
+	Direction: [Generator] $\rightarrow$ [Load System]\\
+	Description: Generated counter electromotive force.
+\end{itemize}
+			
+\textbf{Block :Signal Converter}\\
+Block interface description:
+\begin{itemize}
+	\item \textbf{Torque:Voltage}\\
+	Direction: [Torque Sensor] $\rightarrow$ [Signal Converter]\\
+	Description: An analog signal (-5 V to 5 V) which is proportional to the torque measured by the sensor (-5 Nm to 5 Nm).
+	\item \textbf{Angle:Frequency}\\
+	Direction: [Torque Sensor] $\rightarrow$ [Signal Converter]\\
+	Description: A square-wave signal with a frequency which is proportional to the angular velocity measured by the sensor.
+	\item \textbf{TorqueC:Voltage}\\
+	Direction: [Signal Converter] $\rightarrow$ [Control Unit]\\
+	Description: An analog signal (0-5 V) which is proportional to the input signal (Torque:Voltage). This signal can be read by the control unit.
+	\item \textbf{AngleC:Frequency}\\
+	Direction: [Signal Converter] $\rightarrow$ [Control Unit]\\
+	Description: A square-wave signal with an identical frequency as the input signal (Angle:Frequency); but without overshoots. This signal can be read by the control unit.
+\end{itemize}
+							
+\textbf{Block :Load System}\\ 
+Block interface description:
+\begin{itemize}
+	\item \textbf{Supply5:Voltage}\\
+	Direction: [Level Converter] $\rightarrow$ [Load System]\\
+	Description: Converted supply voltage of 5 VDC.
+	\item \textbf{GenPower:Power}\\
+	Direction: [Generator] $\rightarrow$ [Load System]\\
+	Description: Generated counter electromotive force.
+	\item \textbf{RegControl:PWM}\\
+	Direction: [Control Unit] $\rightarrow$ [Load System]\\
+	Description: PWM-signal which controls the size of the load.
+	\item \textbf{ISense:Voltage}\\
+	Direction: [Load System] $\rightarrow$ [Control Unit]\\
+	Description: A voltage which is proportional to the current in the Load System.
+\end{itemize}
+								
+\textbf{Block :Power Sensor}\\
+Block interface description:
+\begin{itemize}
+	\item \textbf{ExternalEl:Power}\\
+	Direction: [External] $\rightarrow$ [Power Sensor]\\
+	Description: Electrical power from the vehicle's battery.
+	\item \textbf{VoltageP:Voltage}\\
+	Direction: [Power Sensor] $\rightarrow$ [Control Unit]\\
+	Description: The voltage-drop over the vehicle's battery.
+	\item \textbf{CurrentP:Voltage}\\
+	Direction: [Power Sensor] $\rightarrow$ [Control Unit]\\
+	Description: An analog signal which is proportional to the current delivered by the vehicle's battery.
+\end{itemize}
+									
+\textbf{Block :Control Unit}\\
+Block interface description:
+\begin{itemize}
+	\item \textbf{Supply5:Voltage}\\
+	Direction: [Level Converter] $\rightarrow$ [Control Unit]\\
+	Description: Converted supply voltage of 5 VDC.
+	\item \textbf{TorqueC:Voltage}\\
+	Direction: [Signal Converter] $\rightarrow$ [Control Unit]\\
+	Description: An analog signal (0-5 V) which is proportional to the input signal (Torque:Voltage). This signal can be read by the control unit.
+	\item \textbf{AngleC:Frequency}\\	
+	Direction: [Signal Converter] $\rightarrow$ [Control Unit]\\
+	Description: A square-wave signal with an identical frequency as the input signal (Angle:Frequency); but without overshoots. This signal can be read by the control unit.
+	\item \textbf{RegControl:PWM}\\
+	Direction: [Control Unit] $\rightarrow$ [Load System]\\
+	Description: PWM-signal which controls the size of the load.
+	\item \textbf{ISense:Voltage}\\
+	Direction: [Load System] $\rightarrow$ [Control Unit]\\
+	Description: A voltage which is proportional to the current in the Load System.
+	\item \textbf{VoltageP:Voltage}\\
+	Direction: [Power Sensor] $\rightarrow$ [Control Unit]\\
+	Description: The voltage-drop over the vehicle's battery.
+	\item \textbf{CurrentP:Voltage}\\
+	Direction: [Power Sensor] $\rightarrow$ [Control Unit]\\
+	Description: An analog signal which is proportional to the current delivered by the vehicle's battery.
+	\item \textbf{:UART}\\
+	Direction: [Control Unit] $\leftrightarrow$ [External]\\
+	Description: A signal which transmits data to the computer using the UART-protocol.
+\end{itemize}

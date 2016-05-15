@@ -1,0 +1,168 @@
+\begin{table}[h!]
+	\centering
+	\label{my-label}	
+	\begin{tabular}{|p{1.5 cm}|p{4.2 cm}|p{2.1 cm}|p{2.1 cm}|p{2.1 cm}|}
+		\hline
+		Test of requirements: 
+		& \multicolumn{4}{l|}{RR\_F7 RR\_F10 RR\_F11} \\ \hline
+		Setup 
+		& \multicolumn{4}{l|}{Rolling Road is turned on and connected to a PC with the AU GUI application.} \\ \hline
+		Test NR:
+		& \multicolumn{4}{l|}{1} \\ \hline
+		\textbf{Steps} & \textbf{action} & \textbf{Expected result} & 
+		\textbf{Actual result} & \textbf{Accept/ Comment} \\ \hline
+		1 
+		& (AU GUI) Click “select” and choose the right com port. 
+		& The GUI will show the information that is being received from Rolling Road.
+		&
+		& \\ \hline
+		2
+		& (AU GUI) Click Calibrate.
+		& All sensor values on the GUI resets to zero.
+		&
+		& \\ \hline
+		3
+		& (AU GUI) Change Force.
+		& The SetForce column changes on the GUI.
+		&
+		& \\ \hline
+		4
+		& (AU GUI) Change PID values
+		& The PID value column changes on the GUI.
+		&
+		& \\ \hline
+		5
+		& (Rolling Road) Rolling Road power off and on again, and reconnect (use step 1)
+		& All sensor values are still calibrated on the GUI.
+		&
+		& \\ \hline
+	\end{tabular}
+	\caption{}
+\end{table}
+
+
+\begin{table}[h!]
+	\centering
+	\label{my-label}	
+	\begin{tabular}{|p{1.5 cm}|p{4.2 cm}|p{2.1 cm}|p{2.1 cm}|p{2.1 cm}|}
+		\hline
+		Test of requirements: 
+		& \multicolumn{4}{l|}{RR\_F4 RR\_F5 RR\_F8 RR\_NF6 Test PID regulator. Test sensors.} \\ \hline
+		Setup 
+		& \multicolumn{4}{l|}{Is connected to AU GUI and the test subject is on the Rolling Road.} \\ \hline
+		Test NR:
+		& \multicolumn{4}{l|}{2} \\ \hline
+		\textbf{Steps} & \textbf{action} & \textbf{Expected result} & 
+		\textbf{Actual result} & \textbf{Accept/ Comment} \\ \hline
+		1 
+		& (AU GUI) Change PID values to 0 2 0. 
+		& Nothing of interest.
+		&
+		& \\ \hline
+		2
+		& (AU GUI) Set force after table in RR\_NF6 and regulate the speed on the subject also after the table. For every test, take note of all values from the GUI and calculate manual effect and efficiency. $ U*I=E_el $;$ V*F=E_mek $; $ Efficiency=(E_el/E_mek)*100 $
+		& The force should change to the right value. The calculated values should be the same as on the GUI and efficiency should be the same as diagram XX(XX since we dont yet know the diagram).
+		&
+		& \\ \hline
+	\end{tabular}
+	\caption{}
+\end{table}
+
+\begin{table}[h!]
+	\centering
+	\label{my-label}	
+	\begin{tabular}{|p{1.5 cm}|p{4.2 cm}|p{2.1 cm}|p{2.1 cm}|p{2.1 cm}|}
+		\hline
+		Test of requirements: 
+		& \multicolumn{4}{l|}{RR\_NF11 RR\_NF12 RR\_NF13} \\ \hline
+		Setup 
+		& \multicolumn{4}{l|}{Connect to GUI and power on. No subject! PID is working} \\ \hline
+		Test NR:
+		& \multicolumn{4}{l|}{3} \\ \hline
+		\textbf{Steps} & \textbf{action} & \textbf{Expected result} & 
+		\textbf{Actual result} & \textbf{Accept/ Comment} \\ \hline
+		1 
+		& (Rolling Road) Connect terminal motor\_out\_+ and motor\_out\_gnd to a 10-Ohm resistor. Connect terminal motor\_in\_+ and motor\_in\_gnd to a 10 V power supply and turn on the power .  
+		& 10 V $\pm$50 mV and 1 A $\pm$100 mA is seen on the GUI. 
+		&
+		& \\ \hline
+		2
+		& Change the supply to 20 V.
+		& 20 V $\pm$50 mV and 2 A $\pm$100 mA is seen on the GUI.
+		&
+		& \\ \hline
+		3
+		& Turn off supply
+		& 
+		&
+		& \\ \hline
+		4
+		& Place the subject on the Rolling Road. Start the subject. Use a external RPM counter, and calculate the speed. 
+		& The calculated speed is the same as in the GUI.
+		&
+		& \\ \hline
+		5
+		& Lock the axle between the generator and torque sensor. On the Road of Rolling Road mount a newton meter. Pull parallel till it shows 5 N.  
+		& Force in the GUI should be 5 N $\pm$100 Nmm.
+		&
+		& \\ \hline
+		6
+		& Do step 5 again just with 2.5 N 
+		& Force in the GUI should be 2.5 N $\pm$100 Nmm.
+		&
+		& \\ \hline
+	\end{tabular}
+	\caption{}
+\end{table}
+
+
+\begin{table}[h!]
+	\centering
+	\label{my-label}	
+	\begin{tabular}{|p{1.5 cm}|p{4.2 cm}|p{2.1 cm}|p{2.1 cm}|p{2.1 cm}|}
+		\hline
+		Test of requirements: 
+		& \multicolumn{4}{l|}{RR\_NF3 RR\_NF5  Test max effect on the generator.	PID regulator.} \\ \hline
+		Setup 
+		& \multicolumn{4}{l|}{Is connected to a GUI and the test subject is on the Rolling Road. PID is working.} \\ \hline
+		Test NR:
+		& \multicolumn{4}{l|}{4} \\ \hline
+		\textbf{Steps} & \textbf{action} & \textbf{Expected result} & 
+		\textbf{Actual result} & \textbf{Accept/ Comment} \\ \hline
+		1 
+		& (AU GUI) Set force to 5 N and start the subject with a speed of 5 m/s  
+		& The force should settle after maximum 100 ms and a maximum peak 5.25 N on the GUI.  
+		&
+		& \\ \hline
+		2
+		& (AU GUI) Set force to 25 N and change the speed slowly and carefully to 8 m/s.
+		& Everything still works on Rolling Road. Effect on the GUI is around 200W.
+		&
+		& \\ \hline
+	\end{tabular}
+	\caption{}
+\end{table}
+
+\begin{table}[h!]
+	\centering
+	\label{my-label}	
+	\begin{tabular}{|p{1.5 cm}|p{4.2 cm}|p{2.1 cm}|p{2.1 cm}|p{2.1 cm}|}
+		\hline
+		Test of requirements: 
+		& \multicolumn{4}{l|}{RR\_NF1 RR\_NF2 RR\_NF4} \\ \hline
+		Setup 
+		& \multicolumn{4}{l|}{} \\ \hline
+		Test NR:
+		& \multicolumn{4}{l|}{5} \\ \hline
+		\textbf{Steps} & \textbf{action} & \textbf{Expected result} & 
+		\textbf{Actual result} & \textbf{Accept/ Comment} \\ \hline
+		1 
+		& Use a ruler to check the dimensions of the PCB layout and confirm it is placed inside of a box(Same as requirements). Check if the Load system is mounted onto a plate.
+		& The dimensions of the PCB is less than: Length 15 cm, width 15 cm and height 5 cm. The PCB is inside of a XX, and the Load system is mounted onto a plate.
+		&
+		& \\ \hline
+	\end{tabular}
+	\caption{}
+\end{table}
+
+

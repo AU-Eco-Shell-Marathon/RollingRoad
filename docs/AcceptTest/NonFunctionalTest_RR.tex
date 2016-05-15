@@ -1,0 +1,43 @@
+\section{Test of Non-functional requirements}
+Text
+
+\begin{table}[h!]
+	\centering
+	\label{my-label}
+	\begin{tabular}{|p{1.5 cm}|p{2.1 cm}|p{2.1 cm}|p{2.1 cm}|p{2.1 cm}|p{2.1 cm}|}
+		\hline
+		\textbf{Req. \#} & \textbf{Description} & \textbf{Test procedure} & 
+		\textbf{Expected result} & \textbf{Actual result} & \textbf{Accept/ Comment} \\ \hline
+		RR\_NF1 
+		& Must be able to measure a current in the Load System up to a maximum of 21 A with a precision of $\pm$100 mA.
+		& The Load System is applied a series of constant currents with known size up towards the limit.
+		& The output on the GUI is identical with the input.
+		& 
+		& \\ \hline
+		RR\_NF2 
+		& The generator must have a maximum power dissipation of 200 W.
+		& The voltage and current are measured with a multimeter and used to calculate the power.
+		& The maximum power is measured to be less than 200 W.
+		&
+		& \\ \hline
+		RR\_NF3 
+		& Must be able to measure torque from an angular velocity up to a maximum of 6000 rpm with a precision of $\pm$100 mN$\cdot$m.
+		& The Roll is applied a series of constant torques with known size up towards the limit.
+		& The output on the GUI is identical with the input.
+		& 
+		& \\ \hline
+		RR\_NF4 
+		& Must be able to measure the velocity of the wheel $\pm$2 km/h.
+		& The Roll is applied a series of constant angular velocities with known size.
+		& The output on the GUI is compared to the input velocity.
+		& 
+		& \\ \hline
+		RR\_NF5 
+		& The regulation must have a bandwidth of XXX.
+		& 
+		& 
+		& 
+		& \\ \hline
+	\end{tabular}
+	\caption{Test of the non-functional requirements for Rolling Road}
+\end{table}

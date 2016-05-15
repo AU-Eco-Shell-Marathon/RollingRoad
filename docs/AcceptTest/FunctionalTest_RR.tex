@@ -1,0 +1,43 @@
+\section{Test of functional requirements}
+Text
+
+\begin{table}[h!]
+	\centering
+	\label{my-label}
+	\begin{tabular}{|p{1.5 cm}|p{2.1 cm}|p{2.1 cm}|p{2.1 cm}|p{2.1 cm}|p{2.1 cm}|}
+		\hline
+		\textbf{Req. \#} & \textbf{Description} & \textbf{Test procedure} & 
+		\textbf{Expected result} & \textbf{Actual result} & \textbf{Accept/ Comment} \\ \hline
+		RR\_F1 
+		& Must be able to communicate with a PC and an associated GUI.
+		& The Control Unit is connected to a PC.
+		& The GUI displays a message which validates the connection.
+		&
+		& \\ \hline
+		RR\_F2
+		& The user must be able to regulate the load in the system via the GUI.
+		& The user sets a chosen load (measured in N$\cdot$m) and applies a equal amount of torque to the Roll.
+		& The Roll stops.
+		& 
+		& \\ \hline
+		RR\_F3 
+		& Must be able to display the collected results on the GUI.
+		& The Wheel is spun in order to create a certain amount of torque.
+		& The results are displayed on the GUI and graphs the data over time.
+		& 
+		& \\ \hline
+		RR\_F4 
+		& Must be able to perform an automatic shutdown when a current of 21 A is measured in the system.
+		& A current of 21 A is applied to the circuit.
+		& The GUI displays an error-message and the µC shuts down.
+		&
+		& \\ \hline
+		RR\_F5 
+		& Must be able to measure the power from the battery and the torque given to the generator. 
+		& 
+		&
+		&
+		& \\ \hline
+	\end{tabular}
+	\caption{Test of the functional requirements for Rolling Road}
+\end{table}

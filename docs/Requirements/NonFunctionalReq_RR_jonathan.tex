@@ -1,0 +1,69 @@
+\section{Non-Functional Requirement Rolling Road}
+
+\begin{table}[h!]
+	\label{FREQ_AU2}
+	\centering
+	\begin{tabular}{|p{2 cm}|p{10 cm}|p{2 cm}|}
+		\hline
+		\textbf{Req. \#} & \textbf{Description} & \textbf{Comments} \\\hline
+		RR\_NF1
+		& The maximum dimensions of the PCB-layout are: Length 15 cm, width 15 cm and height 5 cm. 
+		&  \\ \hline
+		RR\_NF2
+		& The PCB is fitted inside of the Control-box of the type (Specific box will be put in when we know)
+		& \\ \hline
+		RR\_NF3
+		& The current though the Load System does not exceed a maximum of 15 A.
+		& \\ \hline
+		RR\_NF4
+		& The Load system and the super capacitor is mounted on the seperate Load-plate.
+		& \\ \hline
+		RR\_NF5
+		& Load system max power 200 watt.
+		& \\ \hline
+		RR\_NF6 
+		& Load system must be able to deliver these forces at a certain speed. See table: 
+		& \\ &
+		$\begin{array}{c|c}
+			Speed (km/h) & Max force (N) \\ 
+			18 & 19.25+2 \\ 
+			24.8 & 21.76+2 \\ 
+			30 & 22.59+2
+		\end{array} $
+		& \\ \hline
+		RR\_NF7
+		& Load system must be able to deliver these forces in a simulated run at a certain speed. See table:
+		& \\ &
+		$\begin{array}{c|c|c}
+			Speed (km/h) & Min force (N) & Max Force (N) \\ 
+			18 & 0 to (19.25+2) & 41.00 \\ 
+			24.8 & 0 to (21.76+2) & 49.37 \\ 
+			30 & 0 to (22.59+2) & 65.27
+		\end{array}$
+		& \\ \hline
+		RR\_NF8
+		& Load system must deliver a constant force with max 0.4 N AC-RMS. 
+		& \\ \hline
+		RR\_NF9
+		& PID settling time must be 100 ms. 
+		&  \\ \hline
+		RR\_NF10
+		& The max \%OS of the PID must be 5\%. 
+		&  \\ \hline
+		RR\_NF11
+		& Voltage sensor precision is max $\pm$ 50 mV and operates at a range of 0 V to 50 V. 
+		&  \\ \hline
+		RR\_NF12
+		& Current sensor precision is max $\pm$ 100 mA and operates at a range of 0 A to 16 A. 
+		&  \\ \hline
+		RR\_NF13
+		& Torque sensor precision is max $\pm$ 100 Nmm and operates at a range of $\pm$ 5 Nm. 
+		&  \\ \hline
+		RR\_NF14
+		& Minimum sample frequency of all sensors must be 2 kS/s.  
+		&  \\ \hline
+	\end{tabular}
+	\caption{Non-functional requirements concerning Rolling Road}
+\end{table}
+
+

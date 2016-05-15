@@ -1,0 +1,30 @@
+\section{Block description}
+The blocks in the BDD are described as follows:
+\begin{itemize}
+	\item \textbf{Voltage Adaptor}\\
+	Description: This block converts 230 VAC to 12 VDC in order to control the system. This allows the system to be directly powered by the power grid.
+	\item \textbf{Roll Stand}\\
+	Description: This block contains the various mechanical subsystems.
+	\begin{itemize}
+		\item \textbf{Roll}\\
+		Description: The cylinder which is rotated by the vehicle.
+		\item \textbf{Generator}\\
+		Description: A DC-generator which generates a voltage proportional to the angular velocity.
+		\item \textbf{Torque Sensor}\\
+		Description: Converts the angular velocity and torque to electrical signals.
+	\end{itemize}
+	\item \textbf{Control Unit}\\
+	Description: Reads the Roll's angular velocity, torque, electrical power in the battery and mechanical power given to the Roll. Furthermore it controls the resistance in the Load System and sends the collected data to the Computer.
+	\item \textbf{Control System}\\
+	Description: This block contains the various electrical subsystems.
+	\begin{itemize}
+		\item \textbf{Signal Converter}\\
+		Description: Converts the generated signals from the Torque Sensor to signals which are readable for the Control Unit.
+		\item \textbf{Level Converter}\\
+		Description: Converts the 12 VDC voltage to 5 VDC in order to power the control unit.
+		\item \textbf{Power Sensor}\\
+		Description: Converts electrical power from the vehicle's battery to signals which are readable for the Control Unit.
+	\end{itemize}
+	\item \textbf{Load System}\\
+	Description: A separate electrical circuit which serves as a mechanical resistance in the generator.
+\end{itemize}
