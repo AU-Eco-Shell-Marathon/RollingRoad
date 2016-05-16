@@ -24,7 +24,7 @@ Sensor class: are measuring the efficiency of the test object. There is a couple
 	\label{fig:Class_diagram_ControllerClass_RR_PSoC}
 \end{figure}
 
-\begin{table}[h!]
+\begin{table}[H]
 	\centering
 	\begin{tabular}{|p{5 cm}|p{10 cm}|}
 		\hline
@@ -74,7 +74,7 @@ Sensor class: are measuring the efficiency of the test object. There is a couple
 \end{figure}
 
 
-\begin{table}[h!]
+\begin{table}[H]
 	\centering
 	\begin{tabular}{|p{5 cm}|p{10 cm}|}
 		\hline
@@ -134,7 +134,7 @@ Sensor class: are measuring the efficiency of the test object. There is a couple
 \end{figure}
 
 
-\begin{table}[h!]
+\begin{table}[H]
 	\centering
 	\begin{tabular}{|p{5 cm}|p{10 cm}|}
 		\hline
@@ -151,13 +151,81 @@ Sensor class: are measuring the efficiency of the test object. There is a couple
 		\\ & \textbf{Parameter list}
 		\\ & \begin{itemize}
 			\item {\large float}
-			\subitem \textit{This parameter is used to }
-			\item {\large uint8*}
-			\subitem \textit{A pointer to the data you want to saved. Note It will be a good idea to save it to the same data type as you have defined in the initializing}
+			\subitem \textit{Is the sensor/plant value}
+			\item {\large float}
+			\subitem \textit{Is the input value}
 		\end{itemize}
 		\\ \hline
-
+		
+		setPID
+		& This method can change the PID values.
+		\\ & \textbf{Parameter list}
+		\\ & \begin{itemize}
+			\item {\large const struct PIDparameter *}
+			\subitem \textit{Change PID regulator parameter to the new PID values}
+		\end{itemize} 
+		\\ \hline
+		
+		getPID\_ptr
+		& return a pointer to its PID values.
+		\\ & \textbf{Return parameter (struct PIDparameter *)}
+		\\ & Return a pointer to the PID values. 
+		\\ \hline
+		
 	\end{tabular}
 	\caption{Class description PID}
 	\label{table:Class_description_PID_RR_PSoC}
 \end{table}
+
+\subsection{Sensor}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics [width=5in]{Software/Pictures/klassediagram_sensor.png}
+	\caption{Sensor class of Rolling Road PSoC}
+	\label{fig:Class_diagram_Sensor_RR_PSoC}
+\end{figure}
+
+
+\begin{table}[H]
+	\centering
+	\begin{tabular}{|p{5 cm}|p{10 cm}|}
+		\hline
+		\textbf{methods} & \textbf{Description} \\ \hline
+		
+		getData
+		& It will return a data sample, if there is enough measure data. 
+		\\ & \textbf{Return parameter (char)}
+		\\ & If it return 1, it has return the measure data though the parameter list. If 0 where is no new data ready.
+		\\ & \textbf{Parameter list}
+		\\ & \begin{itemize}
+			\item {\large struct data *}
+			\subitem \textit{A pointer to where the data will be saved if where is enough measure data.}
+		\end{itemize}
+		\\ \hline
+		
+		getTorque \fxnote{klasse diagram passer ikke sammen med klassebeskrivelse}
+		& Is used to get the Torque without calculate all others values. In this project it is used by the PID class, to get the Torque value with less latency.
+		\\ & \textbf{Return parameter (float)}
+		\\ & It return the Torque value in $ N*m $ 
+		\\ \hline
+		
+		getDistance
+		& Get the distance Rolling Road has rolled. 
+		\\ & \textbf{Return parameter (int32)}
+		\\ & It return the distance in $ m $
+		\\ & \textbf{Parameter list}
+		\\ & \begin{itemize}
+			\item {\large char}
+			\subitem \textit{If 1 it will reset the counter, if 0 it will just return the distance.}
+		\end{itemize}
+		\\ \hline
+		
+	\end{tabular}
+	\caption{Class description Sensor}
+	\label{table:Class_description_Sensor_RR_PSoC}
+\end{table}
+
+
+
+
