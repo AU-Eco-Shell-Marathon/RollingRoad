@@ -1,0 +1,163 @@
+\section{Class diagram}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics [width=6in]{Software/Pictures/klassediagram.png}
+	\caption{Class diagram of Rolling Road PSoC}
+	\label{fig:Class_diagram_RR_PSoC}
+\end{figure}
+
+The Class diagram of Rolling Road \vref{fig:Class_diagram_RR_PSoC}, there is 5 class, where all class are connect to the ControllerClass which control the flow in sequencing of the program.
+Uart class: is the class that communicate whit the control panel through UART. It both send new data and receive settings and commands from the control panel. 
+EEPROM class: make it possible to save data too the EEPROM on the PSoC. It can be PID parameters and offset values to all sensors.
+PID class: job is to regulate the load system, so the wanted Torque reached. 
+Sensor class: are measuring the efficiency of the test object. There is a couple sensor in this class, and the reason that it has not been split op is because it will be hard to control that all data is collected on the same time.
+
+\section{Class description}
+
+\subsection{ControllerClass}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics [width=3in]{Software/Pictures/klassediagram_ControllerClass.png}
+	\caption{ControllerClass of Rolling Road PSoC}
+	\label{fig:Class_diagram_ControllerClass_RR_PSoC}
+\end{figure}
+
+\begin{table}[h!]
+	\centering
+	\begin{tabular}{|p{5 cm}|p{10 cm}|}
+		\hline
+		\textbf{methods} & \textbf{Description} \\ \hline
+		
+		run
+		& Is the method what check if there is new data ready from the main PC or if where is a new sample ready to send to the main PC. Data from the PC can be PID values, wanted force value or commands to calibrate all sensors. 
+		\\ & It is also here that the main thread have to work, and should be placed in a while(1) loop. \\ 
+		\hline
+		
+		stop
+		& This method can be used to tell Rolling Road that no more information is wanted, and it don't have to regulate the load system. 
+		\\ \hline
+		
+		update
+		& Update method are called then new data for Rolling Road is received. This method is used by the UART class.
+		\\ & \textbf{Parameter list}
+		\\ & \begin{itemize}
+			\item {\large const struct PIDparameter *}
+			\subitem \textit{If this is not a null pointer, is it new PID values, an will be updated.}
+			\item {\large const float *}
+			\subitem \textit{If this is not a null pointer, it is a new wanted force an will update the old value.}
+			\item {\large char}
+			\subitem \textit{If not 0. It will reset the distance counter.}
+		\end{itemize}
+		\\ \hline
+		
+		init
+		& this method is used to initializing Rolling Road, and should be run in the start of the main function.  
+		\\ \hline
+		
+		calibrate
+		& This method are used from the UART class so the main PC can signal to Rolling Road. That is shall perform a calibration of all sensor.
+		\\ \hline
+	\end{tabular}
+	\caption{Class description ControllerClass}
+	\label{table:Class_description_ControllerClass_RR_PSoC}
+\end{table}
+
+\subsection{EEPROM}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics [width=3in]{Software/Pictures/klassediagram_EEPROM.png}
+	\caption{EEPROM class of Rolling Road PSoC}
+	\label{fig:Class_diagram_EEPROM_RR_PSoC}
+\end{figure}
+
+
+\begin{table}[h!]
+	\centering
+	\begin{tabular}{|p{5 cm}|p{10 cm}|}
+		\hline
+		\textbf{methods} & \textbf{Description} \\ \hline
+		
+		EEPROM\_read
+		& This method are used to read saved data from the EEPROM on the PSoC.
+		\\ & \textbf{Return parameter}
+		\\ & If the reading are successfully it will return 1. If it fails to read from the EEPROM it return 0. Note it will also fail if there is no saved data.
+		\\ & \textbf{Parameter list}
+		\\ & \begin{itemize}
+			\item {\large uint8}
+			\subitem \textit{this parameter is used to choose the data you want to read, It just the ID of the content that has been saved.}
+			\item {\large uint8*}
+			\subitem \textit{A pointer to a buf the data will be saved to. Note It will be a good idea to save it to the same data type}
+		\end{itemize}
+		\\ \hline
+		
+		EEPROM\_write
+		& This method make it possible to save data to the EEPROM.
+		\\ & \textbf{Return parameter}
+		\\ & if it return 1 it has successfully write the data to the EEPROM. If it return -1 it has failed.
+		\\ & \textbf{Parameter list}
+		\\ & \begin{itemize}
+			\item {\large uint8}
+			\subitem \textit{this parameter is used to choose the data you want to save, It just the ID of the content that you want to save.}
+			\item {\large uint8*}
+			\subitem \textit{A pointer to the data you want to saved. Note It will be a good idea to save it to the same data type as you have defined in the initializing}
+		\end{itemize}
+		\\ \hline
+		
+		EEPROM\_init
+		& This method has to been run before using the two others methods. It will initializing the class.
+		\\ & \textbf{Return parameter}
+		\\ & If it don't return 1, something is wrong and where is probably not enough memory in the EEPROM. If this method don't return 1 don't use the other methods!   
+		\\ & \textbf{Parameter list}
+		\\ & \begin{itemize}
+			\item {\large const size\_t *}
+			\subitem \textit{this parameter is used to send a array of sized of data that will be saved on the EEPROM. The index of the arrays elements is also theres IDs.}
+			\item {\large uint8}
+			\subitem \textit{This parameter is used to tell have many elements there are in the array.}
+		\end{itemize}
+		\\ \hline
+
+	\end{tabular}
+	\caption{Class description EEPROM}
+	\label{table:Class_description_EEPROM_RR_PSoC}
+\end{table}
+
+\subsection{PID}
+
+\begin{figure}[H]
+	\centering
+	\includegraphics [width=3in]{Software/Pictures/klassediagram_PID.png}
+	\caption{PID class of Rolling Road PSoC}
+	\label{fig:Class_diagram_PID_RR_PSoC}
+\end{figure}
+
+
+\begin{table}[h!]
+	\centering
+	\begin{tabular}{|p{5 cm}|p{10 cm}|}
+		\hline
+		\textbf{methods} & \textbf{Description} \\ \hline
+		
+		PID\_init
+		& This method must be run first to initializing the class. 
+		\\ \hline
+		
+		PID\_tick
+		& This method should be executed periodic with constant time delay. This method holds all the calculation, and is here is calculate the PID value from the error of input- and sensor- value.
+		\\ & \textbf{Return parameter}
+		\\ & The return parameter is only used to debug.
+		\\ & \textbf{Parameter list}
+		\\ & \begin{itemize}
+			\item {\large float}
+			\subitem \textit{This parameter is used to }
+			\item {\large uint8*}
+			\subitem \textit{A pointer to the data you want to saved. Note It will be a good idea to save it to the same data type as you have defined in the initializing}
+		\end{itemize}
+		\\ \hline
+
+	\end{tabular}
+	\caption{Class description PID}
+	\label{table:Class_description_PID_RR_PSoC}
+\end{table}

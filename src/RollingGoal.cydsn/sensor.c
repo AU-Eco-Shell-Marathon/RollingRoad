@@ -13,17 +13,15 @@
 #include <Math.h>
 #include "Constants.h"
 
+enum Types {current, volt, torque, rpm}; 
 
-
-
-#define N 128u
 
 CY_ISR_PROTO(SAR_ADC_1);
 CY_ISR_PROTO(SAR_ADC_2);
 CY_ISR_PROTO(RPM_isr);
 
 void calcSamples(const int32 * values, const uint16 N_sample, struct sample * Sample, int32 divider);
-void convertToUnit(int32 * value, const uint16 N_sample,int32 (*CountsTo)(int16), const uint8 type);
+void convertToUnit(int32 * value, uint16 N_sample, enum Types);
 int32 CountToAmp(int32);
 int32 CountToMoment(int32);
 void DMA_setup_DelSig();
@@ -43,7 +41,7 @@ int32 V_motor[N];   int32 V_motor_offset = 0;
 int32 A_motor[N];   int32 A_motor_offset = 0;
 int32 Moment[N];    int32 Moment_offset  = 0;
 int32 RPM[N];
-volatile uint16 n = 0;
+uint16 n = 0;
 
 int16 Moment_temp = 0;
 uint32 RPM_Moment_temp = 0;
@@ -51,14 +49,6 @@ uint32 RPM_Moment_temp = 0;
 // Mållinger af RPM
 
 uint32 RPM_temp = 0;
-
-// strømovervågning til belastningskredsløb.
-int16 A_generator_max = 0;
-int32 A_generator_sum = 0;
-int16 A_generator_min = 0xEFFF;
-uint16 A_generator_samples = 0;
-
-int32 A_generator_offset = 0;
 
 // DMA setup ----------
 // DelSig
@@ -135,25 +125,6 @@ CY_ISR(SAR_ADC_1)
     n++;
 }
 
-CY_ISR(SAR_ADC_2)
-{
-    if(A_generator_samples == 0xFFFF)
-        return;
-    
-    
-    int16 A_temp = ADC_SAR_1_GetResult16() - A_generator_offset;
-    
-    if(A_temp > A_generator_max)
-        A_generator_max = A_temp;
-    else if(A_temp < A_generator_min)
-        A_generator_min = A_temp;
-    
-    A_generator_sum += A_temp;
-    
-    A_generator_samples++;
-    
-}
-
 char RPM_reset=0;
 CY_ISR(RPM_isr)
 {
@@ -196,7 +167,7 @@ CY_ISR(RPM_isr)
     Timer_1_ClearFIFO();
 }
 
-void sensor_init(int32 VM, int32 AM, int32 moment, int32 AG)
+void sensor_init(int32 VM, int32 AM, int32 moment)
 {
     setSNRdB(50.0f);
     DMA_setup_DelSig();
@@ -204,16 +175,12 @@ void sensor_init(int32 VM, int32 AM, int32 moment, int32 AG)
     V_motor_offset = VM;
     A_motor_offset = AM;
     Moment_offset = moment;
-    A_generator_offset = AG;
     
     isr_1_StartEx(SAR_ADC_1);
-    isr_2_StartEx(SAR_ADC_2);
     isr_3_StartEx(RPM_isr);
     
-    ADC_SAR_1_Start();
     ADC_SAR_Seq_1_Start();
     
-    ADC_SAR_1_StartConvert();
     ADC_SAR_Seq_1_StartConvert();
    
     
@@ -238,26 +205,23 @@ void sensor_init(int32 VM, int32 AM, int32 moment, int32 AG)
 
 
 
-void sensor_calibrate(int32* VM, int32* AM, int32* moment, int32* AG)
+void sensor_calibrate(int32* VM, int32* AM, int32* moment)
 {
     calibrate_ = 1;
     V_motor_offset = 0;
     A_motor_offset = 0;
     Moment_offset = 0;
-    A_generator_offset = 0;
     n = 0;
     
-    
-    //n = 0;
+
     while(n != N)
     {
         __asm__ __volatile__("nop;"); // for tvinge den til at blive ved med at tjekke om n != N! fejlen kommer nok af at før while bliver n sat til 0.
     }
     uint16 i;
     
-    int32 AVG[4] = {V_motor[0],A_motor[0],Moment[0], A_generator_sum/A_generator_samples};
-    //int32 MAX[3] = {V_Motor[0],A_motor[0],Moment[0]};
-    //int32 MIN[3] = {V_Motor[0],A_motor[0],Moment[0]};
+    int32 AVG[3] = {V_motor[0],A_motor[0],Moment[0]};
+
     
     for(i = 1; i<N; i++)
     {
@@ -273,12 +237,10 @@ void sensor_calibrate(int32* VM, int32* AM, int32* moment, int32* AG)
     V_motor_offset = AVG[0];
     A_motor_offset = AVG[1];
     Moment_offset = AVG[2];
-    A_generator_offset = AVG[3];
     
     *VM = AVG[0];
     *AM = AVG[1];
     *moment = AVG[2];
-    *AG = AVG[3];
     
     n = 0;
     calibrate_ = 0;
@@ -291,19 +253,21 @@ char getData(struct data * Data)
     if(n != N || calibrate_)
         return 0;
     
-    convertToUnit(V_motor, n, &ADC_SAR_Seq_1_CountsTo_uVolts,0);
-    convertToUnit(A_motor, n, &ADC_SAR_Seq_1_CountsTo_uVolts,1);
-    convertToUnit(Moment, n, NULL,3);
+    convertToUnit(V_motor, n, volt);
+    convertToUnit(A_motor, n, current);
+    convertToUnit(Moment, n, torque);
     
+    
+    // udregning af effektivitet og effekt.
     int32 P_motor[N];
     int32 P_mekanisk[N];
     int32 efficiency[N];
     uint16 i;
     for(i = 0; i < N; i++)
     {
-        P_motor[i] = (int32)(((int64)V_motor[i]*(int64)A_motor[i])/1000000);  //Brug af shift istedet vil koste 4.63% // uWatt
+        P_motor[i] = (int32)(((int64)V_motor[i]*(int64)A_motor[i])/1000000);                                // uWatt
         P_mekanisk[i] = (int32)(((((int64)Moment[i]*(int64)RPM[i])/1000000) * ((int64)RPM_Nm_To_uW))/1000); //uWatt
-        efficiency[i] = (int32)(((int64)P_mekanisk[i]*1000)/P_motor[i]) ; //promille
+        efficiency[i] = (int32)(((int64)P_mekanisk[i]*1000)/P_motor[i]) ;                                   //promille
     }
 
     calcSamples(V_motor, n, &Data->V_motor, 1000000);
@@ -316,11 +280,6 @@ char getData(struct data * Data)
     
     calcSamples(efficiency, n, &Data->efficiency, 10); // udprinter i procent.
     
-    /* snyde koder ;)
-    Data->P_motor.avg = Data->V_motor.avg*Data->A_motor.avg;
-    Data->P_mekanisk.avg = Data->Moment.avg*Data->RPM.avg*0.10472f;
-    Data->efficiency.avg = (Data->P_mekanisk.avg*100)/Data->P_motor.avg;
-    */
     Data->distance = (uint32)((2.0f*PI*RR_radius*(float)Counter_1_ReadCounter())/360.0f);
     Data->time_ms = Counter_2_ReadCounter();
     Data->stop = Status_Reg_1_Read()&0b1;
@@ -412,49 +371,27 @@ void calcSamples(const int32 * values,const uint16 N_sample, struct sample * Sam
     Sample->min = (float)MIN/divider;
 }
 
-void convertToUnit(int32 * value, const uint16 N_sample,int32 (*CountsTo)(int16), const uint8 type)
+void convertToUnit(int32 * value, uint16 N_sample, enum Types type)
 {
+
     uint8 i;
     for(i = 0; i < N_sample; i++)
     {
-        if(type == 0)
-            value[i] = CountsTo(value[i])*11;
-        else if(type == 1)
-            value[i] = CountToAmp(CountsTo(value[i]));
-        else if(type == 2)
-            value[i] = CountToMoment(CountsTo(value[i]));
-        else if(type == 3)
-            value[i] = CountToMoment(ADC_DelSig_1_CountsTo_uVolts(value[i]));
+        switch(type)
+        {
+            case volt:
+                value[i] = ADC_SAR_Seq_1_CountsTo_uVolts(value[i])*VoltToVolt;
+            case current:
+                value[i] = ADC_SAR_Seq_1_CountsTo_uVolts(value[i])*VoltToCurrent;
+            case torque:
+                value[i] = (ADC_DelSig_1_CountsTo_uVolts(value[i]) > 0 ? ADC_DelSig_1_CountsTo_uVolts(value[i]) : -ADC_DelSig_1_CountsTo_uVolts(value[i]))*VoltToTorque;
+                
+            case rpm:
+            default:
+                return;
+                break;
+        };
     }
-    
-}
-
-int32 CountToMoment(int32 uvolt)
-{
-    if(uvolt < 0)
-        return -uvolt*2;
-    else
-        return uvolt*2;
-}
-
-int32 CountToAmp(int32 uvolt)
-{
-    return uvolt*24;
-}
-
-float MomentToForce(float Moment_value)
-{
-    return Moment_value * RR_radius_reciprocal;
-}
-
-float ForceToMoment(float Force_value)
-{
-    return Force_value * RR_radius;
-}
-
-float RPMToSpeed(float RPM_value)
-{
-    return RPM_value * RPM_To_Speed;
 }
 
 /* [] END OF FILE */

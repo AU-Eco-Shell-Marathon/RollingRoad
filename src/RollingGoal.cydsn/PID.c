@@ -49,31 +49,30 @@ float *PID_tick(float sensor, float input)
 {
     float PIDval = 0;
     
-	//err = ((float)input - (float)sensor)/1000000;
-    err = (input - sensor); //5.5 - 6.0=-0.5
+    err = (input - sensor);
 	
     PID_debug[1] = err;
     
-	PIDval += parameter_.Kp*err; //Proportional calc. 10*-0.5=-5
+	PIDval += parameter_.Kp*err; //Proportional calc.
 	
     
     iState += parameter_.Ki*err*dt + anti_windup_back_calc;
     
     
-	PIDval += iState; //intergral calc 1*-0.0025=-0.0025+-5=-5.0025
+	PIDval += iState; //intergral calc
 	
 	PIDval += parameter_.Kd*((err-pre_err)/dt); //differentiel calc
 	
 	pre_err = err;
 	
-    anti_windup_back_calc = PIDval; // PIDval 300
+    anti_windup_back_calc = PIDval;
     
 	if(PIDval > parameter_.MAX)
 		PIDval = parameter_.MAX;
     else if(PIDval < parameter_.MIN)
         PIDval = parameter_.MIN;
 	
-    anti_windup_back_calc = PIDval - anti_windup_back_calc; // PIDval = 255 => anti_windup_back_calc = 255 - 300 = -45
+    anti_windup_back_calc = PIDval - anti_windup_back_calc;
     
     PID_debug[2] = anti_windup_back_calc;
     

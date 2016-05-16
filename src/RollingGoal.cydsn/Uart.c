@@ -153,10 +153,9 @@ void ReceiveUARTData(void)
         else if(buf[0]=='5') // PID regulations
         {
             int i = 0;
-            uint8 temp = 0;
             float PID[3];
-            //buf[buf_n+1] = 0;
-            temp = atoi(strtok((char *)buf," "));
+            
+            atoi(strtok((char *)buf," "));
             for(i = 0; i<3 ;i++)
             {
                 PID[i] = atof(strtok(NULL, " "));//eventuelt bare NULL istedet for (char *)buf

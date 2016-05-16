@@ -19,12 +19,6 @@
 #include "Uart.h"
 #include "EEPROM.h"
 
-//struct sekvens{
-//    int * seq_moment;
-//    uint32 * seq_distance;
-//    uint16 size;
-//};
-
 void run();
 void stop();
 void update(const struct PIDparameter *, const float * Force, char restart);
