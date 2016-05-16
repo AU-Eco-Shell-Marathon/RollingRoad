@@ -1,0 +1,124 @@
+\section{Anti-aliasing filter}
+The purpose of Anti-aliasing filter is to prevent aliasing of the signal, but also too suppress noise and get a better SNR. All sensor on the Rolling Road have an Anti-aliasing filter.  
+
+\subsection{Design}
+
+% \usepackage{graphicx}
+% \usepackage{color}
+
+
+\sloppy
+\definecolor{lightgray}{gray}{0.5}
+%\definecolor{matlabCode}{LimeGreen}
+\setlength{\parindent}{0pt}
+
+%\begin{document}
+	
+	
+	
+	\subsubsection{Calculation of low-pass filter to all the sensors.}
+	
+	In this section a Matlab script is used to make the best design for all the sensor.
+	The script ADC\_lowpassFilter will automatic find the best components to realized the Anti-aliasing filters from a E12 values, and will make sure that it will suppress the aliasing down to SNR of the ADC.
+	
+	
+		
+	\subsubsection*{Torque transducer}
+	
+	\begin{lstlisting}
+	ADC_fs=48000;
+	ADC_N=12;
+	fc=444/60; % RPM/60 = 1/s. Max rpm for Rolling Road then testning AU2 444RPM
+	
+	[R, C, fc_real, M]=ADC_lowpassFilter(ADC_fs, ADC_N, fc, [100*10^-12, 500*10^-9], 100*10^3, 66);
+	
+	T_AAF_Torque=tf(((1/(R*C))^M)/((s+1/(R*C))^M))
+	
+	figure;
+	bode(T_AAF_Torque);
+	legend('show');
+	grid on;
+	\end{lstlisting}
+	
+	\color{lightgray} \begin{verbatim}
+	T_AAF_Torque =
+	
+	45.79
+	---------
+	s + 45.79
+	
+	Continuous-time transfer function.
+	
+	\end{verbatim} 
+	
+	\includegraphics [width=4in]{Hardware/Pictures/FilterAnalyse_01.eps}
+	
+	
+	\color{black} \subsection*{V\_motor and A\_motor}
+	
+	\begin{verbatim}
+	ADC_fs=52500;
+	ADC_N=12;
+	
+	% The signal of interest is the avarge value, because of thate the PWM
+	% signal will be seen as noise signal, and must be filt out, also because
+	% els the sample rate have to be around 512 times bigger then PWM
+	% frequency.
+	
+	V_noise_PP = 5;
+	% because is it a PWM signal.
+	
+	Supress_dB=-20*log10(0.001)
+	% calculate how much the PW; signal have to be supress to meet the
+	% requarment of 0.1% accuracy.
+	
+	% The design will be build based on that the PWM frequency is
+	% graeter then 2000Hz, and have to supress the PWM signal 60dB too only
+	% getting a 0.1% accuracy. This can be done with a 2. order lowpass filter
+	% 2 decades before 2000Hz this is 20Hz. The PWM signal will be supress with
+	% 80dB.
+	
+	fc=20;
+	
+	[R, C, fc_real, M]=ADC_lowpassFilter(ADC_fs, ADC_N, fc, [100*10^-12, 500*10^-9], 100*10^3);
+	
+	
+	T_AAF_effect=tf(((1/(R*C))^M)/((s+1/(R*C))^M))
+	
+	figure;
+	bode(T_AAF_effect);
+	legend('show');
+	grid on;
+	\end{verbatim}
+	
+	\color{lightgray} \begin{verbatim}
+	Supress_dB =
+	
+	60
+	
+	
+	ADC_SNRdB =
+	
+	74
+	
+	
+	T_AAF_effect =
+	
+	1.502e04
+	------------------------
+	s^2 + 245.1 s + 1.502e04
+	
+	Continuous-time transfer function.
+	
+	\end{verbatim} 
+	\color{black}
+	
+	\includegraphics [width=4in]{Hardware/Pictures/FilterAnalyse_02.eps}
+
+
+
+\subsection{Implementation}
+Text
+
+\subsection{Unity test}
+Text
