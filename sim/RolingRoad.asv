@@ -1,12 +1,15 @@
-%%% Konstanter
+%% Konstanter
 clear
 close all
 clc
 
+s=tf('s');
+
+
 L_a      = 0.000072;        %DC-generatorens selvinduktion
 R_a      = 0.103;           %Ankermodstand
 R_load   = 1.1;             %Loadmodstand
-f_PID     = 100;            %Samplefrekvensen
+% skal udregnes f_PID     = 100;            %Samplefrekvensen
 N        = 1;               %Antal samples der midles over
 Kt       = 38.5*10^(-3);    %Momentkonstant
 Gear     = 4.3;             %Gearingsforhold i motor
@@ -18,24 +21,43 @@ Kb=Kt;
 M_t     =0.00378            %Motor tidskonstant.
 
 T_PID=f_PID^-1+M_t
-%%% Hastighed
+%% Hastighed
 
 V=24.8;
 
-s=tf('s');
+T_generator=tf((1/M_t)/(s+(1/M_t)))
 
-
+%((1/M_t)/(s+(1/M_t)))
 %%% transfere funktion
-Ea=(1/RR_r)*Gear*Kb*Kt/(R_a+R_load)
+Ea=tf(T_generator^2*(1/RR_r)*Gear*Kb*Kt/(R_a+R_load)) % Moment/rpm    //
+bode(Ea)
+%Gdelay=tf(exp(-s*1/f_PID))
+%Gdelay_2=tf(exp(-s*1/f_PID))
 
-Gdelay=tf(exp(-s*1/f_PID))
-Gdelay_2=tf(exp(-s*1/f_PID))
+TT=Ea*V
 
-Gplant=(1/100)*Ea*24.8*(1000/3600)
+% note fordi hastigheden påvirker proptional på plant, bliver der nød til
+% at korigeres for det, derfor skal P ledet i PID regulatoren være en
+% funktion af hastigheden! 
+
+func_P=(V*(1/RR_r)*Gear*Kb*Kt/(R_a+R_load))^-1
+
+b
+
+Gplan=tf()
+
+
+Gplant=tf((1/100)*Ea*24.8*(1000/3600)*((1/M_t)/(s+(1/M_t)))) %kraften
+
+% Open loop bode
+
+figure
+bode(Gplant)
+grid on
 
 
 
-%%% PID konstanter
+%% PID konstanter
 if 0
     KP=5.66
     KI=137
@@ -179,17 +201,19 @@ fc=5;
 fc/(fs/2)
 
 
-[b, a]=butter(5, fc/(fs/2), 'LOW')
+[b, a]=butter(2, fc/(fs/2), 'LOW')
 
 freqz(b,a)
 
-x=randn(1,10000)*1 + 10*sin(2*pi*5*[0:10000-1]*fs^-1);
+x=randn(1,10000)*1 + 10*sin(2*pi*0.1*[0:10000-1]*fs^-1);
 
 y=filter(b, a, x)
 
 plot([0:10000-1]*fs^-1,x)
 hold on
 plot([0:10000-1]*fs^-1,y)
+
+(fc*2*pi)^-1
 
 
 
