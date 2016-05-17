@@ -221,6 +221,41 @@ Sensor class: are measuring the efficiency of the test object. There is a couple
 		\end{itemize}
 		\\ \hline
 		
+		setSNRdB
+		& Set a minimum SNR requirements, and will control the internal exponential average filter to meet the requirements.  
+		\\ & \textbf{Parameter list}
+		\\ & \begin{itemize}
+			\item {\large float}
+			\subitem \textit{SNRdB in a float value}
+		\end{itemize}
+		\\ \hline
+		
+		sensor\_init
+		& Initializing all sensor and DMA setup. It will also set offset value.   
+		\\ & \textbf{Parameter list}
+		\\ & \begin{itemize}
+			\item {\large int32}
+			\subitem \textit{Offset value to the Voltage sensor.}
+			\item {\large int32}
+			\subitem \textit{Offset value to the Current sensor.}
+			\item {\large int32}
+			\subitem \textit{Offset value to the Torque sensor.}
+		\end{itemize}
+		\\ \hline
+		
+		sensor\_calibrate
+		& Make a new calibration for Voltage-, Current and Torque sensor.    
+		\\ & \textbf{Parameter list}
+		\\ & \begin{itemize}
+			\item {\large int32*}
+			\subitem \textit{Return the offset value to the Voltage sensor.}
+			\item {\large int32}
+			\subitem \textit{Return the offset value to the Current sensor.}
+			\item {\large int32}
+			\subitem \textit{Return the offset value to the Torque sensor.}
+		\end{itemize}
+		\\ \hline
+		
 	\end{tabular}
 	\caption{Class description Sensor}
 	\label{table:Class_description_Sensor_RR_PSoC}
