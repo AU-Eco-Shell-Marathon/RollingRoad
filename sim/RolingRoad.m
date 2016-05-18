@@ -1,22 +1,20 @@
-%% Konstanter
+%% Constants
 clear
 close all
 clc
 
 s=tf('s');
 
-
-L_a      = 0.000072;        %DC-generatorens selvinduktion (H)
-R_a      = 0.103;           %Ankermodstand (Ohm)
-R_load   = 1.1;             %Loadmodstand
-N        = 1;               %Antal samples der midles over
-Kt       = 38.5*10^(-3);    %Momentkonstant (Nm/A)
-Gear     = 4.3;             %Gearingsforhold i motor
-RR_r     = 0.076            %RollingRoad radius
+L_a      = 0.000072;        %DC-generator inductance (H)
+R_a      = 0.103;           %Anchor resistance (Ohm)
+R_load   = 1.1;             %Load resistance (Ohm)
+Kt       = 38.5*10^(-3);    %Torque Constant (Nm/A)
+Gear     = 4.3;             %Gearing ratio in the motor
+RR_r     = 0.076            %RollingRoad radius (m)
 Kb       = Kt;              %Speed constant (rpm/Nm)
-M_t      = 0.00378          %Motor tidskonstant. (s)
+M_t      = 0.00378          %Motor time constant. (s)
 K_pwm    = 256;             %PWM steps 
-Moment_fc= 178.6251
+Moment_fc= 178.6251         %Torque sensor filter cut frequency (rad/s)
 
 % Convert 
 OmegaToRpm = 60/(2*pi);
@@ -24,48 +22,44 @@ SpeedToOmega = (2*pi)/(2*pi*RR_r);
 SpeedToRpm = SpeedToOmega * OmegaToRpm;
 Km_hTom_s = 1000/3600;
 KmToRpm=Km_hTom_s*SpeedToRpm
-% Hastighed
 
-
-
+% Test speed
 Speed = 30*Km_hTom_s%m/s
 
 V_rpm=Speed*SpeedToRpm %rpm
-%%% overførings funktioner
+%%% transfer functions
 
+% transfer function of the generatoren.
+T_generator=tf((1/M_t)/(s+(1/M_t))) % motor delay
 
-% overførings funktionen for generatoren.
-T_generator=tf((1/M_t)/(s+(1/M_t))) % motor forsinkelse
-
-% overførings funktionen for Moment/rpm.
+% transfer function for Moment/rpm.
 Ea=tf(T_generator*Gear*Kb*Kt/(R_a+R_load)) % Moment/rpm    //
 
-% med en konstant hastighed.
-TT=Ea*V_rpm % hvis det ikke er konstant skal den have en ekstra T_generator
+% at a steady speed.
+TT=Ea*V_rpm % if speed is not constant have to add an extra T_generator
 
-% note fordi hastigheden påvirker proptional på plant, bliver der nød til
-% at korigeres for det, derfor skal P ledet i PID regulatoren være en
-% funktion af hastigheden! 
+% note because the speed affects proportional on the system. there be
+% something there adjusted receptional of the speeds proportional affect.
+% This can be done with a function of speed
 
 syms v_rpm
 
 P_rpm=1/(v_rpm*Gear*Kb*Kt/(R_a+R_load))
-
-% skal implemteres ind i koden
+% must be implemented into the code.
 
 func_P=(V_rpm*Gear*Kb*Kt/(R_a+R_load))^-1
 
 Ggenerator=tf(func_P*TT)
 
-% PWM signal overførings funktion
+% PWM signal transfer function 
 
 G_PWM=(1/K_pwm)
 
-% Moment transducer filter
+% Torque sensor filter
 
 G_moment_filter=(Moment_fc*2*pi) / (s + Moment_fc*2*pi)
 
-% samlet overførings funktion
+% total transfer function of the plant.
 
 Gplant = G_PWM*Ggenerator
 
@@ -74,16 +68,16 @@ Gplant*G_moment_filter
 figure
 bode(Gplant*G_moment_filter)
 grid on
-legend('show')
+%legend('show')
 
-%% Udregning af PID values
-% krav
+%% Calculation of PID constanst
+% requirements
  
 Ts=0.1;
 
 OS=5; 
 
-% udregning
+% Calculation
 
 Zeta = (-log( OS / 100 ))/(( pi^2 + log( OS / 100 )^2)^0.5)
 
@@ -131,14 +125,18 @@ T = ( Omega_Phase_m / 10 )^-1
 
 I = tf(( 1 ) / ( T * s ) )
 
-figure
-bode(P*(I+1)*Gplant*G_moment_filter)
-grid on
 
 figure
+subplot(2,2,[1,2]);
+bode(P*(I+1)*Gplant*G_moment_filter)
+grid on
+subplot(223);
 step(feedback(P*(I+1)*Gplant, G_moment_filter))
-hold on
+title('Step load system')
+grid on
+subplot(224);
 step(feedback(P*(I+1), Gplant*G_moment_filter)/K_pwm) % PID value are ignoring PWM 
+title('Step PID values (MAX 1)')
 grid on
 
 % D led udregning
@@ -158,30 +156,26 @@ T_PSoC_max=c2d(P*(I+1)*Gplant,Ts_min,'tustin')
 
 T_PSoC_min=c2d(P*(I+1)*Gplant,Ts_max,'tustin')
 
-% bode plot af openloop
-figure
-bode(P*(I+1)*Gplant)
-hold on
-bode(T_PSoC_min*c2d(G_moment_filter,Ts_max,'tustin'));
-hold on
-bode(T_PSoC_max*c2d(G_moment_filter,Ts_min,'tustin'));
-grid on
+
 
 T_PSoC_min_feedback=feedback(T_PSoC_min,c2d(G_moment_filter,Ts_max,'tustin'));
 T_PSoC_max_feedback=feedback(T_PSoC_max,c2d(G_moment_filter,Ts_min,'tustin'));
 
+% bode plot af openloop
 figure
+subplot(121)
+bode(P*(I+1)*Gplant*G_moment_filter)
+hold on
+bode(c2d(P*(I+1)*Gplant*G_moment_filter,Ts_max,'tustin'));
+hold on
+bode(c2d(P*(I+1)*Gplant*G_moment_filter,Ts_min,'tustin'));
+grid on
+
+subplot(122)
 step(feedback(P*(I+1)*Gplant, G_moment_filter))
 hold on
 step(T_PSoC_min_feedback)
 step(T_PSoC_max_feedback)
-grid on
-
-figure
-bode(feedback(P*(I+1)*Gplant, G_moment_filter))
-hold on
-bode(T_PSoC_min_feedback)
-bode(T_PSoC_max_feedback)
 grid on
 
 %% PID konstanter

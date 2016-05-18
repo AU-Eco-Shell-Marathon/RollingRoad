@@ -1,0 +1,1026 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>RolingRoad</title><meta name="generator" content="MATLAB 8.5"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2016-05-18"><meta name="DC.source" content="RolingRoad.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img, h1 img, h2 img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, code { font-size:12px; }
+tt { font-size: 1.2em; }
+pre { margin:0px 0px 20px; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+pre.error { color:red; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+.footer a { color:#878787; }
+.footer a:hover { color:#878787; text-decoration:underline; }
+.footer a:visited { color:#878787; }
+
+table th { padding:7px 5px; text-align:left; vertical-align:middle; border: 1px solid #d6d4d4; font-weight:bold; }
+table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px solid #d6d4d4; }
+
+
+
+
+
+  </style></head><body><div class="content"><h2>Contents</h2><div><ul><li><a href="#1">Constants</a></li><li><a href="#2">transfer functions</a></li><li><a href="#3">Udregning af PID values</a></li><li><a href="#4">Udregning af sample tid for PID regulatoren</a></li><li><a href="#5">PID konstanter</a></li><li><a href="#6">Delays - PWM signal og PID(inkluderet sampletiden)</a></li><li><a href="#7">Krav godkendt?</a></li><li><a href="#8">PID indstilling</a></li><li><a href="#11">Udregning af filter koeficenter til Moment transducer</a></li></ul></div><h2>Constants<a name="1"></a></h2><pre class="codeinput">clear
+close <span class="string">all</span>
+clc
+
+s=tf(<span class="string">'s'</span>);
+
+L_a      = 0.000072;        <span class="comment">%DC-generator inductance (H)</span>
+R_a      = 0.103;           <span class="comment">%Anchor resistance (Ohm)</span>
+R_load   = 1.1;             <span class="comment">%Load resistance (Ohm)</span>
+Kt       = 38.5*10^(-3);    <span class="comment">%Torque Constant (Nm/A)</span>
+Gear     = 4.3;             <span class="comment">%Gearing ratio in the motor</span>
+RR_r     = 0.076            <span class="comment">%RollingRoad radius (m)</span>
+Kb       = Kt;              <span class="comment">%Speed constant (rpm/Nm)</span>
+M_t      = 0.00378          <span class="comment">%Motor time constant. (s)</span>
+K_pwm    = 256;             <span class="comment">%PWM steps</span>
+Moment_fc= 178.6251         <span class="comment">%Torque sensor filter cut frequency (rad/s)</span>
+
+<span class="comment">% Convert</span>
+OmegaToRpm = 60/(2*pi);
+SpeedToOmega = (2*pi)/(2*pi*RR_r);
+SpeedToRpm = SpeedToOmega * OmegaToRpm;
+Km_hTom_s = 1000/3600;
+KmToRpm=Km_hTom_s*SpeedToRpm
+
+<span class="comment">% Test speed</span>
+Speed = 30*Km_hTom_s<span class="comment">%m/s</span>
+
+V_rpm=Speed*SpeedToRpm <span class="comment">%rpm</span>
+</pre><h2>transfer functions<a name="2"></a></h2><pre class="codeinput"><span class="comment">% transfer function of the generatoren.</span>
+T_generator=tf((1/M_t)/(s+(1/M_t))) <span class="comment">% motor delay</span>
+
+<span class="comment">% transfer function for Moment/rpm.</span>
+Ea=tf(T_generator*Gear*Kb*Kt/(R_a+R_load)) <span class="comment">% Moment/rpm    //</span>
+
+<span class="comment">% at a steady speed.</span>
+TT=Ea*V_rpm <span class="comment">% if speed is not constant have to add an extra T_generator</span>
+
+<span class="comment">% note because the speed affects proportional on the system. there be</span>
+<span class="comment">% something there adjusted receptional of the speeds proportional affect.</span>
+<span class="comment">% This can be done with a function of speed</span>
+
+syms <span class="string">v_rpm</span>
+
+P_rpm=1/(v_rpm*Gear*Kb*Kt/(R_a+R_load))
+<span class="comment">% must be implemented into the code.</span>
+
+func_P=(V_rpm*Gear*Kb*Kt/(R_a+R_load))^-1
+
+Ggenerator=tf(func_P*TT)
+
+<span class="comment">% PWM signal transfer function</span>
+
+G_PWM=(1/K_pwm)
+
+<span class="comment">% Torque sensor filter</span>
+
+G_moment_filter=(Moment_fc*2*pi) / (s + Moment_fc*2*pi)
+
+<span class="comment">% total transfer function of the plant.</span>
+
+Gplant = G_PWM*Ggenerator
+
+<span class="comment">% Open loop bode</span>
+Gplant*G_moment_filter
+figure
+bode(Gplant*G_moment_filter)
+grid <span class="string">on</span>
+<span class="comment">%legend('show')</span>
+</pre><pre class="codeoutput">
+RR_r =
+
+    0.0760
+
+
+M_t =
+
+    0.0038
+
+
+Moment_fc =
+
+  178.6251
+
+
+KmToRpm =
+
+   34.9024
+
+
+Speed =
+
+    8.3333
+
+
+V_rpm =
+
+   1.0471e+03
+
+
+T_generator =
+ 
+    264.6
+  ---------
+  s + 264.6
+ 
+Continuous-time transfer function.
+
+
+Ea =
+ 
+       1.686
+  ---------------
+  1.203 s + 318.3
+ 
+Continuous-time transfer function.
+
+
+TT =
+ 
+       1766
+  ---------------
+  1.203 s + 318.3
+ 
+Continuous-time transfer function.
+
+ 
+P_rpm =
+ 
+                                  188.7451117
+                                  -----------
+                                     v_rpm
+
+func_P =
+
+    0.1803
+
+
+Ggenerator =
+ 
+       318.3
+  ---------------
+  1.203 s + 318.3
+ 
+Continuous-time transfer function.
+
+
+G_PWM =
+
+    0.0039
+
+
+G_moment_filter =
+ 
+    1122
+  --------
+  s + 1122
+ 
+Continuous-time transfer function.
+
+
+Gplant =
+ 
+       1.243
+  ---------------
+  1.203 s + 318.3
+ 
+Continuous-time transfer function.
+
+
+ans =
+ 
+              1395
+  -----------------------------
+  1.203 s^2 + 1668 s + 3.572e05
+ 
+Continuous-time transfer function.
+
+</pre><img vspace="5" hspace="5" src="RolingRoad_01.png" alt=""> <h2>Udregning af PID values<a name="3"></a></h2><p>krav</p><pre class="codeinput">Ts=0.1;
+
+OS=5;
+
+<span class="comment">% udregning</span>
+
+Zeta = (-log( OS / 100 ))/(( pi^2 + log( OS / 100 )^2)^0.5)
+
+Phase_m = atan( ( 2 * Zeta ) / (( -2 * Zeta^2 + ( 1 + 4 * Zeta^4)^0.5 )^0.5))*(180/pi) + 7
+
+-(180-Phase_m)
+
+Omega_BW_min = ( 4 / ( Zeta * Ts )) * sqrt(( 1 - 2 * Zeta^2 ) + sqrt( 4 * Zeta^4 ) - 4 * Zeta^2 + 2 )
+
+<span class="keyword">if</span> (OS == 5)
+    Omega_Phase_m =  816;
+<span class="keyword">elseif</span> (OS == -10)
+    Omega_Phase_m =  113;
+<span class="keyword">elseif</span> (OS == -20)
+    Omega_Phase_m =  134;
+<span class="keyword">elseif</span> (OS == -30)
+    Omega_Phase_m =  155;
+<span class="keyword">end</span>
+
+
+<span class="comment">% P led udregning</span>
+<span class="keyword">if</span> (OS == 5)
+    P=10^( 60.3 / 20 )
+<span class="keyword">elseif</span> (OS == -10)
+    P=10^( 58 / 20 )
+<span class="keyword">elseif</span> (OS == -20)
+    P=10^( 59.9 / 20 )
+<span class="keyword">elseif</span> (OS == -30)
+    P=10^( 61.6 / 20 )
+<span class="keyword">end</span>
+
+figure
+bode(P*Gplant*G_moment_filter)
+grid <span class="string">on</span>
+
+figure
+step(feedback(P*Gplant,G_moment_filter))
+grid <span class="string">on</span>
+
+<span class="comment">% I led udregning</span>
+
+T = ( Omega_Phase_m / 10 )^-1
+
+<span class="comment">%I = tf(( s + T^-1 ) / s )</span>
+
+I = tf(( 1 ) / ( T * s ) )
+
+figure
+bode(P*(I+1)*Gplant*G_moment_filter)
+grid <span class="string">on</span>
+
+figure
+step(feedback(P*(I+1)*Gplant, G_moment_filter))
+hold <span class="string">on</span>
+step(feedback(P*(I+1), Gplant*G_moment_filter)/K_pwm) <span class="comment">% PID value are ignoring PWM</span>
+grid <span class="string">on</span>
+
+<span class="comment">% D led udregning</span>
+
+<span class="comment">% beh&oslash;ves ikke da b&aring;ndbredden allerede er 816 rad/s og den &oslash;nsket var 60 rad/s s&aring; den er langt</span>
+<span class="comment">% over. S&aring; kravet er overholdt.</span>
+</pre><pre class="codeoutput">
+Zeta =
+
+    0.6901
+
+
+Phase_m =
+
+   71.6253
+
+
+ans =
+
+ -108.3747
+
+
+Omega_BW_min =
+
+   60.6531
+
+
+P =
+
+   1.0351e+03
+
+
+T =
+
+    0.0123
+
+
+I =
+ 
+      1
+  ---------
+  0.01225 s
+ 
+Continuous-time transfer function.
+
+</pre><img vspace="5" hspace="5" src="RolingRoad_02.png" alt=""> <img vspace="5" hspace="5" src="RolingRoad_03.png" alt=""> <img vspace="5" hspace="5" src="RolingRoad_04.png" alt=""> <img vspace="5" hspace="5" src="RolingRoad_05.png" alt=""> <h2>Udregning af sample tid for PID regulatoren<a name="4"></a></h2><pre class="codeinput">Ts_max=0.5/Omega_Phase_m
+Ts_min=0.15/Omega_Phase_m
+
+Fs_max=Ts_min^-1
+Fs_min=Ts_max^-1
+
+T_PSoC_max=c2d(P*(I+1)*Gplant,Ts_min,<span class="string">'tustin'</span>)
+
+T_PSoC_min=c2d(P*(I+1)*Gplant,Ts_max,<span class="string">'tustin'</span>)
+
+<span class="comment">% bode plot af openloop</span>
+figure
+bode(P*(I+1)*Gplant)
+hold <span class="string">on</span>
+bode(T_PSoC_min*c2d(G_moment_filter,Ts_max,<span class="string">'tustin'</span>));
+hold <span class="string">on</span>
+bode(T_PSoC_max*c2d(G_moment_filter,Ts_min,<span class="string">'tustin'</span>));
+grid <span class="string">on</span>
+
+T_PSoC_min_feedback=feedback(T_PSoC_min,c2d(G_moment_filter,Ts_max,<span class="string">'tustin'</span>));
+T_PSoC_max_feedback=feedback(T_PSoC_max,c2d(G_moment_filter,Ts_min,<span class="string">'tustin'</span>));
+
+figure
+step(feedback(P*(I+1)*Gplant, G_moment_filter))
+hold <span class="string">on</span>
+step(T_PSoC_min_feedback)
+step(T_PSoC_max_feedback)
+grid <span class="string">on</span>
+
+figure
+bode(feedback(P*(I+1)*Gplant, G_moment_filter))
+hold <span class="string">on</span>
+bode(T_PSoC_min_feedback)
+bode(T_PSoC_max_feedback)
+grid <span class="string">on</span>
+</pre><pre class="codeoutput">
+Ts_max =
+
+   6.1275e-04
+
+
+Ts_min =
+
+   1.8382e-04
+
+
+Fs_max =
+
+        5440
+
+
+Fs_min =
+
+        1632
+
+
+T_PSoC_max =
+ 
+  0.09671 z^2 + 0.00144 z - 0.09527
+  ---------------------------------
+       z^2 - 1.953 z + 0.9525
+ 
+Sample time: 0.00018382 seconds
+Discrete-time transfer function.
+
+
+T_PSoC_min =
+ 
+  0.3107 z^2 + 0.01516 z - 0.2956
+  -------------------------------
+       z^2 - 1.85 z + 0.8501
+ 
+Sample time: 0.00061275 seconds
+Discrete-time transfer function.
+
+</pre><img vspace="5" hspace="5" src="RolingRoad_06.png" alt=""> <img vspace="5" hspace="5" src="RolingRoad_07.png" alt=""> <img vspace="5" hspace="5" src="RolingRoad_08.png" alt=""> <h2>PID konstanter<a name="5"></a></h2><pre class="codeinput"><span class="keyword">if</span> 0
+    KP=5.66
+    KI=137
+    KD=0;
+    Gpid=pid(KP,KI, KD, tf(Gplant), 1/f_PID)
+<span class="keyword">else</span>
+    load(<span class="string">'PID_data'</span>, <span class="string">'C'</span>);
+    Gpid=C
+    clear <span class="string">'C'</span>
+<span class="keyword">end</span>
+</pre><h2>Delays - PWM signal og PID(inkluderet sampletiden)<a name="6"></a></h2><pre class="codeoutput">
+Gpid =
+ 
+              Ts  
+  Kp + Ki * ------
+              z-1 
+
+  with Kp = 0.162, Ki = 24, Ts = 0.01
+ 
+Sample time: 0.01 seconds
+Discrete-time PI controller in parallel form.
+
+</pre><h2>Krav godkendt?<a name="7"></a></h2><pre class="codeinput"><span class="comment">% Hastighed 18km/h max Kraft = 41.00N, min = 19.25N</span>
+
+N_gen_18_max=Ea*18*(1000/3600)*Gear*(1/RR_r)
+E_mek_max=41*18*(1000/3600)
+E_mek_gen_max=N_gen_18_max*18*(1000/3600)
+E_mek_min=19.25*18*(1000/3600)
+<span class="comment">%krav ikke godkendt til simulation run, kun konstant hastighed.</span>
+
+<span class="comment">% Hastighed 24.8km/h max Kraft = 49.37N, min = 21.76N</span>
+
+N_gen_18_max=Ea*24.8*(1000/3600)*Gear*(1/RR_r)
+E_mek_max=49.37*24.8*(1000/3600)
+E_mek_gen_max=N_gen_18_max*24.8*(1000/3600)
+E_mek_min=21.76*24.8*(1000/3600)
+<span class="comment">%krav ikke godkendt til simulation run, kun konstant hastighed. OBS der</span>
+<span class="comment">%sker overbelastning.</span>
+
+<span class="comment">% Hastighed 30km/h max Kraft = 65.27N, min = 22.59N</span>
+
+N_gen_18_max=Ea*30*(1000/3600)*Gear*(1/RR_r)
+E_mek_max=65.27*30*(1000/3600)
+E_mek_gen_max=N_gen_18_max*30*(1000/3600)
+E_mek_min=22.59*30*(1000/3600)
+<span class="comment">%krav ikke godkendt til simulation run, kun konstant hastighed. OBS der</span>
+<span class="comment">%sker overbelastning.</span>
+
+MAX_RPM=30*(1000/3600)*(1/RR_r)*(60/(2*pi))
+MAX_T=65.27*RR_r
+
+
+<span class="comment">% kan udfra analysen konkludere at RollingRoad kun kan klare at udf&oslash;re test</span>
+<span class="comment">% p&aring; konstante hastigheder, og derfor kan kun bruges til at tjekke</span>
+<span class="comment">% nyttevirkning. Dette vil sige at der kan ikke laves test k&oslash;rrelse p&aring; den.</span>
+<span class="comment">% Der skal findes en generator der kan t&aring;le 550watt. F&oslash;r simulation run kan</span>
+<span class="comment">% udf&oslash;res, selvf&oslash;lgelig er dette ogs&aring; lidt mist&aelig;nkligt, da motoren kun</span>
+<span class="comment">% skulle kunne klare 200watt, men det skyldes at den skal helt der op i et</span>
+<span class="comment">% lille tidsrum.</span>
+</pre><pre class="codeoutput">
+N_gen_18_max =
+ 
+        477
+  ---------------
+  1.203 s + 318.3
+ 
+Continuous-time transfer function.
+
+
+E_mek_max =
+
+   205
+
+
+E_mek_gen_max =
+ 
+       2385
+  ---------------
+  1.203 s + 318.3
+ 
+Continuous-time transfer function.
+
+
+E_mek_min =
+
+   96.2500
+
+
+N_gen_18_max =
+ 
+       657.2
+  ---------------
+  1.203 s + 318.3
+ 
+Continuous-time transfer function.
+
+
+E_mek_max =
+
+  340.1044
+
+
+E_mek_gen_max =
+ 
+       4527
+  ---------------
+  1.203 s + 318.3
+ 
+Continuous-time transfer function.
+
+
+E_mek_min =
+
+  149.9022
+
+
+N_gen_18_max =
+ 
+        795
+  ---------------
+  1.203 s + 318.3
+ 
+Continuous-time transfer function.
+
+
+E_mek_max =
+
+  543.9167
+
+
+E_mek_gen_max =
+ 
+       6625
+  ---------------
+  1.203 s + 318.3
+ 
+Continuous-time transfer function.
+
+
+E_mek_min =
+
+  188.2500
+
+
+MAX_RPM =
+
+   1.0471e+03
+
+
+MAX_T =
+
+    4.9605
+
+</pre><h2>PID indstilling<a name="8"></a></h2><pre class="codeinput"><span class="comment">%Gplant=Gdelay*(1/100)*Gdelay_2*Ea*24.8*(1000/3600)</span>
+
+G_system=feedback(Gpid*Gplant, 1)
+
+figure(2);
+step(G_system);
+grid <span class="string">on</span>;
+hold <span class="string">on</span>;
+figure(3);
+bode(G_system)
+grid <span class="string">on</span>
+hold <span class="string">on</span>
+</pre><pre class="codeoutput error">Error using * (line 80)
+Sampling times must agree.
+
+Error in RolingRoad (line 242)
+G_system=feedback(Gpid*Gplant, 1)
+</pre><pre class="codeinput">pidTuner(G_system)
+pause
+G_system_new=feedback(C*Gplant, 1)
+
+
+figure(2);
+step(G_system_new);
+grid <span class="string">on</span>;
+hold <span class="string">on</span>;
+figure(3);
+bode(G_system_new)
+grid <span class="string">on</span>
+hold <span class="string">on</span>
+</pre><pre class="codeinput">save(<span class="string">'PID_data'</span>, <span class="string">'C'</span>);
+</pre><h2>Udregning af filter koeficenter til Moment transducer<a name="11"></a></h2><p>FIR eksampel</p><pre class="codeinput">clear
+close <span class="string">all</span>
+clc
+
+fs=4000;
+fc=20; <span class="comment">% den &aelig;ndre sig ikke hurtigt, men vil gerne undg&aring; st&oslash;j kilder s&aring; som</span>
+<span class="comment">%        50Hz forsyning, derfor v&aelig;lger vi at g&aring; efter en kn&aelig;k frekvens</span>
+<span class="comment">%        under 50Hz.</span>
+
+
+N=250
+
+round(N*fc/fs)
+
+H=[ones(1,round(N*fc/fs)), zeros(1, N - 2*round(N*fc/fs)), ones(1,round(N*fc/fs) - 1)]
+
+
+h=fftshift(ifft(H)).*blackman(length(H))'
+
+figure
+freqz(h)
+figure
+impz(h)
+
+
+x=randn(1,10000)*1 + 10;
+
+y=conv(h, x);
+
+figure
+plot([0:10000-1]*fs^-1,x)
+hold <span class="string">on</span>
+plot([0:10000-1]*fs^-1,y(1:10000))
+
+
+
+
+<span class="comment">% det kan godt virke, dog er filter orden ret stor og vil kr&aelig;ve en masse</span>
+<span class="comment">% kraft og tid at udregne.</span>
+
+<span class="comment">%IIR eksample</span>
+clear
+close <span class="string">all</span>
+clc
+
+fs=4000;
+fc=5;
+
+fc/(fs/2)
+
+
+[b, a]=butter(2, fc/(fs/2), <span class="string">'LOW'</span>)
+
+freqz(b,a)
+
+x=randn(1,10000)*1 + 10*sin(2*pi*0.1*[0:10000-1]*fs^-1);
+
+y=filter(b, a, x)
+
+plot([0:10000-1]*fs^-1,x)
+hold <span class="string">on</span>
+plot([0:10000-1]*fs^-1,y)
+
+(fc*2*pi)^-1
+</pre><p class="footer"><br><a href="http://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2015a</a><br></p></div><!--
+##### SOURCE BEGIN #####
+%% Constants
+clear
+close all
+clc
+
+s=tf('s');
+
+L_a      = 0.000072;        %DC-generator inductance (H)
+R_a      = 0.103;           %Anchor resistance (Ohm)
+R_load   = 1.1;             %Load resistance (Ohm)
+Kt       = 38.5*10^(-3);    %Torque Constant (Nm/A)
+Gear     = 4.3;             %Gearing ratio in the motor
+RR_r     = 0.076            %RollingRoad radius (m)
+Kb       = Kt;              %Speed constant (rpm/Nm)
+M_t      = 0.00378          %Motor time constant. (s)
+K_pwm    = 256;             %PWM steps 
+Moment_fc= 178.6251         %Torque sensor filter cut frequency (rad/s)
+
+% Convert 
+OmegaToRpm = 60/(2*pi);
+SpeedToOmega = (2*pi)/(2*pi*RR_r);
+SpeedToRpm = SpeedToOmega * OmegaToRpm;
+Km_hTom_s = 1000/3600;
+KmToRpm=Km_hTom_s*SpeedToRpm
+
+% Test speed
+Speed = 30*Km_hTom_s%m/s
+
+V_rpm=Speed*SpeedToRpm %rpm
+%%% transfer functions
+
+% transfer function of the generatoren.
+T_generator=tf((1/M_t)/(s+(1/M_t))) % motor delay
+
+% transfer function for Moment/rpm.
+Ea=tf(T_generator*Gear*Kb*Kt/(R_a+R_load)) % Moment/rpm    //
+
+% at a steady speed.
+TT=Ea*V_rpm % if speed is not constant have to add an extra T_generator
+
+% note because the speed affects proportional on the system. there be
+% something there adjusted receptional of the speeds proportional affect.
+% This can be done with a function of speed
+
+syms v_rpm
+
+P_rpm=1/(v_rpm*Gear*Kb*Kt/(R_a+R_load))
+% must be implemented into the code.
+
+func_P=(V_rpm*Gear*Kb*Kt/(R_a+R_load))^-1
+
+Ggenerator=tf(func_P*TT)
+
+% PWM signal transfer function 
+
+G_PWM=(1/K_pwm)
+
+% Torque sensor filter
+
+G_moment_filter=(Moment_fc*2*pi) / (s + Moment_fc*2*pi)
+
+% total transfer function of the plant.
+
+Gplant = G_PWM*Ggenerator
+
+% Open loop bode
+Gplant*G_moment_filter
+figure
+bode(Gplant*G_moment_filter)
+grid on
+%legend('show')
+
+%% Udregning af PID values
+% krav
+ 
+Ts=0.1;
+
+OS=5; 
+
+% udregning
+
+Zeta = (-log( OS / 100 ))/(( pi^2 + log( OS / 100 )^2)^0.5)
+
+Phase_m = atan( ( 2 * Zeta ) / (( -2 * Zeta^2 + ( 1 + 4 * Zeta^4)^0.5 )^0.5))*(180/pi) + 7
+
+-(180-Phase_m)
+
+Omega_BW_min = ( 4 / ( Zeta * Ts )) * sqrt(( 1 - 2 * Zeta^2 ) + sqrt( 4 * Zeta^4 ) - 4 * Zeta^2 + 2 ) 
+
+if (OS == 5)
+    Omega_Phase_m =  816;
+elseif (OS == -10)
+    Omega_Phase_m =  113;
+elseif (OS == -20)
+    Omega_Phase_m =  134;
+elseif (OS == -30)
+    Omega_Phase_m =  155;
+end
+
+
+% P led udregning
+if (OS == 5)
+    P=10^( 60.3 / 20 )
+elseif (OS == -10)
+    P=10^( 58 / 20 )
+elseif (OS == -20)
+    P=10^( 59.9 / 20 )
+elseif (OS == -30)
+    P=10^( 61.6 / 20 )
+end
+
+figure
+bode(P*Gplant*G_moment_filter)
+grid on
+
+figure
+step(feedback(P*Gplant,G_moment_filter))
+grid on
+
+% I led udregning
+
+T = ( Omega_Phase_m / 10 )^-1
+
+%I = tf(( s + T^-1 ) / s )
+
+I = tf(( 1 ) / ( T * s ) )
+
+figure
+bode(P*(I+1)*Gplant*G_moment_filter)
+grid on
+
+figure
+step(feedback(P*(I+1)*Gplant, G_moment_filter))
+hold on
+step(feedback(P*(I+1), Gplant*G_moment_filter)/K_pwm) % PID value are ignoring PWM 
+grid on
+
+% D led udregning
+
+% behøves ikke da båndbredden allerede er 816 rad/s og den ønsket var 60 rad/s så den er langt
+% over. Så kravet er overholdt.
+
+%% Udregning af sample tid for PID regulatoren
+
+Ts_max=0.5/Omega_Phase_m
+Ts_min=0.15/Omega_Phase_m
+
+Fs_max=Ts_min^-1
+Fs_min=Ts_max^-1
+
+T_PSoC_max=c2d(P*(I+1)*Gplant,Ts_min,'tustin')
+
+T_PSoC_min=c2d(P*(I+1)*Gplant,Ts_max,'tustin')
+
+% bode plot af openloop
+figure
+bode(P*(I+1)*Gplant)
+hold on
+bode(T_PSoC_min*c2d(G_moment_filter,Ts_max,'tustin'));
+hold on
+bode(T_PSoC_max*c2d(G_moment_filter,Ts_min,'tustin'));
+grid on
+
+T_PSoC_min_feedback=feedback(T_PSoC_min,c2d(G_moment_filter,Ts_max,'tustin'));
+T_PSoC_max_feedback=feedback(T_PSoC_max,c2d(G_moment_filter,Ts_min,'tustin'));
+
+figure
+step(feedback(P*(I+1)*Gplant, G_moment_filter))
+hold on
+step(T_PSoC_min_feedback)
+step(T_PSoC_max_feedback)
+grid on
+
+figure
+bode(feedback(P*(I+1)*Gplant, G_moment_filter))
+hold on
+bode(T_PSoC_min_feedback)
+bode(T_PSoC_max_feedback)
+grid on
+
+%% PID konstanter
+if 0
+    KP=5.66
+    KI=137
+    KD=0;
+    Gpid=pid(KP,KI, KD, tf(Gplant), 1/f_PID)
+else
+    load('PID_data', 'C');
+    Gpid=C
+    clear 'C'
+end
+
+%%% Delays - PWM signal og PID(inkluderet sampletiden) 
+
+
+
+%% Krav godkendt?
+
+% Hastighed 18km/h max Kraft = 41.00N, min = 19.25N
+
+N_gen_18_max=Ea*18*(1000/3600)*Gear*(1/RR_r)
+E_mek_max=41*18*(1000/3600)
+E_mek_gen_max=N_gen_18_max*18*(1000/3600)
+E_mek_min=19.25*18*(1000/3600)
+%krav ikke godkendt til simulation run, kun konstant hastighed.
+
+% Hastighed 24.8km/h max Kraft = 49.37N, min = 21.76N
+
+N_gen_18_max=Ea*24.8*(1000/3600)*Gear*(1/RR_r)
+E_mek_max=49.37*24.8*(1000/3600)
+E_mek_gen_max=N_gen_18_max*24.8*(1000/3600)
+E_mek_min=21.76*24.8*(1000/3600)
+%krav ikke godkendt til simulation run, kun konstant hastighed. OBS der
+%sker overbelastning.
+
+% Hastighed 30km/h max Kraft = 65.27N, min = 22.59N
+
+N_gen_18_max=Ea*30*(1000/3600)*Gear*(1/RR_r)
+E_mek_max=65.27*30*(1000/3600)
+E_mek_gen_max=N_gen_18_max*30*(1000/3600)
+E_mek_min=22.59*30*(1000/3600)
+%krav ikke godkendt til simulation run, kun konstant hastighed. OBS der
+%sker overbelastning.
+
+MAX_RPM=30*(1000/3600)*(1/RR_r)*(60/(2*pi))
+MAX_T=65.27*RR_r
+
+
+% kan udfra analysen konkludere at RollingRoad kun kan klare at udføre test
+% på konstante hastigheder, og derfor kan kun bruges til at tjekke
+% nyttevirkning. Dette vil sige at der kan ikke laves test kørrelse på den.
+% Der skal findes en generator der kan tåle 550watt. Før simulation run kan
+% udføres, selvfølgelig er dette også lidt mistænkligt, da motoren kun
+% skulle kunne klare 200watt, men det skyldes at den skal helt der op i et
+% lille tidsrum.
+
+
+%% PID indstilling
+
+%Gplant=Gdelay*(1/100)*Gdelay_2*Ea*24.8*(1000/3600)
+
+G_system=feedback(Gpid*Gplant, 1)
+
+figure(2);
+step(G_system);
+grid on;
+hold on;
+figure(3);
+bode(G_system)
+grid on
+hold on
+
+%%
+
+pidTuner(G_system)
+pause
+G_system_new=feedback(C*Gplant, 1)
+
+
+figure(2);
+step(G_system_new);
+grid on;
+hold on;
+figure(3);
+bode(G_system_new)
+grid on
+hold on
+
+%%
+save('PID_data', 'C');
+
+%% Udregning af filter koeficenter til Moment transducer
+% FIR eksampel
+clear
+close all
+clc
+
+fs=4000;
+fc=20; % den ændre sig ikke hurtigt, men vil gerne undgå støj kilder så som
+%        50Hz forsyning, derfor vælger vi at gå efter en knæk frekvens 
+%        under 50Hz.
+
+
+N=250
+
+round(N*fc/fs)
+
+H=[ones(1,round(N*fc/fs)), zeros(1, N - 2*round(N*fc/fs)), ones(1,round(N*fc/fs) - 1)]
+
+
+h=fftshift(ifft(H)).*blackman(length(H))'
+
+figure
+freqz(h)
+figure
+impz(h)
+
+
+x=randn(1,10000)*1 + 10;
+
+y=conv(h, x);
+
+figure
+plot([0:10000-1]*fs^-1,x)
+hold on
+plot([0:10000-1]*fs^-1,y(1:10000))
+
+
+
+
+% det kan godt virke, dog er filter orden ret stor og vil kræve en masse
+% kraft og tid at udregne.
+
+%IIR eksample
+clear
+close all
+clc
+
+fs=4000;
+fc=5;
+
+fc/(fs/2)
+
+
+[b, a]=butter(2, fc/(fs/2), 'LOW')
+
+freqz(b,a)
+
+x=randn(1,10000)*1 + 10*sin(2*pi*0.1*[0:10000-1]*fs^-1);
+
+y=filter(b, a, x)
+
+plot([0:10000-1]*fs^-1,x)
+hold on
+plot([0:10000-1]*fs^-1,y)
+
+(fc*2*pi)^-1
+
+
+
+
+
+
+
+
+
+
+
+
+##### SOURCE END #####
+--></body></html>

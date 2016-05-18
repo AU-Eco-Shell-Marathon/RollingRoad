@@ -1,0 +1,730 @@
+
+% This LaTeX was auto-generated from MATLAB code.
+% To make changes, update the MATLAB code and republish this document.
+
+\documentclass{article}
+\usepackage{graphicx}
+\usepackage{color}
+
+\sloppy
+\definecolor{lightgray}{gray}{0.5}
+\setlength{\parindent}{0pt}
+
+\begin{document}
+
+    
+    
+\subsection*{Contents}
+
+\begin{itemize}
+\setlength{\itemsep}{-1ex}
+   \item Constants
+   \item transfer functions
+   \item Udregning af PID values
+   \item Udregning af sample tid for PID regulatoren
+   \item PID konstanter
+   \item Delays - PWM signal og PID(inkluderet sampletiden)
+   \item Krav godkendt?
+   \item PID indstilling
+   \item Udregning af filter koeficenter til Moment transducer
+\end{itemize}
+
+
+\subsection*{Constants}
+
+\begin{verbatim}
+clear
+close all
+clc
+
+s=tf('s');
+
+L_a      = 0.000072;        %DC-generator inductance (H)
+R_a      = 0.103;           %Anchor resistance (Ohm)
+R_load   = 1.1;             %Load resistance (Ohm)
+Kt       = 38.5*10^(-3);    %Torque Constant (Nm/A)
+Gear     = 4.3;             %Gearing ratio in the motor
+RR_r     = 0.076            %RollingRoad radius (m)
+Kb       = Kt;              %Speed constant (rpm/Nm)
+M_t      = 0.00378          %Motor time constant. (s)
+K_pwm    = 256;             %PWM steps
+Moment_fc= 178.6251         %Torque sensor filter cut frequency (rad/s)
+
+% Convert
+OmegaToRpm = 60/(2*pi);
+SpeedToOmega = (2*pi)/(2*pi*RR_r);
+SpeedToRpm = SpeedToOmega * OmegaToRpm;
+Km_hTom_s = 1000/3600;
+KmToRpm=Km_hTom_s*SpeedToRpm
+
+% Test speed
+Speed = 30*Km_hTom_s%m/s
+
+V_rpm=Speed*SpeedToRpm %rpm
+\end{verbatim}
+
+
+\subsection*{transfer functions}
+
+\begin{verbatim}
+% transfer function of the generatoren.
+T_generator=tf((1/M_t)/(s+(1/M_t))) % motor delay
+
+% transfer function for Moment/rpm.
+Ea=tf(T_generator*Gear*Kb*Kt/(R_a+R_load)) % Moment/rpm    //
+
+% at a steady speed.
+TT=Ea*V_rpm % if speed is not constant have to add an extra T_generator
+
+% note because the speed affects proportional on the system. there be
+% something there adjusted receptional of the speeds proportional affect.
+% This can be done with a function of speed
+
+syms v_rpm
+
+P_rpm=1/(v_rpm*Gear*Kb*Kt/(R_a+R_load))
+% must be implemented into the code.
+
+func_P=(V_rpm*Gear*Kb*Kt/(R_a+R_load))^-1
+
+Ggenerator=tf(func_P*TT)
+
+% PWM signal transfer function
+
+G_PWM=(1/K_pwm)
+
+% Torque sensor filter
+
+G_moment_filter=(Moment_fc*2*pi) / (s + Moment_fc*2*pi)
+
+% total transfer function of the plant.
+
+Gplant = G_PWM*Ggenerator
+
+% Open loop bode
+Gplant*G_moment_filter
+figure
+bode(Gplant*G_moment_filter)
+grid on
+%legend('show')
+\end{verbatim}
+
+        \color{lightgray} \begin{verbatim}
+RR_r =
+
+    0.0760
+
+
+M_t =
+
+    0.0038
+
+
+Moment_fc =
+
+  178.6251
+
+
+KmToRpm =
+
+   34.9024
+
+
+Speed =
+
+    8.3333
+
+
+V_rpm =
+
+   1.0471e+03
+
+
+T_generator =
+ 
+    264.6
+  ---------
+  s + 264.6
+ 
+Continuous-time transfer function.
+
+
+Ea =
+ 
+       1.686
+  ---------------
+  1.203 s + 318.3
+ 
+Continuous-time transfer function.
+
+
+TT =
+ 
+       1766
+  ---------------
+  1.203 s + 318.3
+ 
+Continuous-time transfer function.
+
+ 
+P_rpm =
+ 
+                                  188.7451117
+                                  -----------
+                                     v_rpm
+
+func_P =
+
+    0.1803
+
+
+Ggenerator =
+ 
+       318.3
+  ---------------
+  1.203 s + 318.3
+ 
+Continuous-time transfer function.
+
+
+G_PWM =
+
+    0.0039
+
+
+G_moment_filter =
+ 
+    1122
+  --------
+  s + 1122
+ 
+Continuous-time transfer function.
+
+
+Gplant =
+ 
+       1.243
+  ---------------
+  1.203 s + 318.3
+ 
+Continuous-time transfer function.
+
+
+ans =
+ 
+              1395
+  -----------------------------
+  1.203 s^2 + 1668 s + 3.572e05
+ 
+Continuous-time transfer function.
+
+\end{verbatim} \color{black}
+    
+\includegraphics [width=4in]{RolingRoad_01.eps}
+
+
+\subsection*{Udregning af PID values}
+
+\begin{par}
+krav
+\end{par} \vspace{1em}
+\begin{verbatim}
+Ts=0.1;
+
+OS=5;
+
+% udregning
+
+Zeta = (-log( OS / 100 ))/(( pi^2 + log( OS / 100 )^2)^0.5)
+
+Phase_m = atan( ( 2 * Zeta ) / (( -2 * Zeta^2 + ( 1 + 4 * Zeta^4)^0.5 )^0.5))*(180/pi) + 7
+
+-(180-Phase_m)
+
+Omega_BW_min = ( 4 / ( Zeta * Ts )) * sqrt(( 1 - 2 * Zeta^2 ) + sqrt( 4 * Zeta^4 ) - 4 * Zeta^2 + 2 )
+
+if (OS == 5)
+    Omega_Phase_m =  816;
+elseif (OS == -10)
+    Omega_Phase_m =  113;
+elseif (OS == -20)
+    Omega_Phase_m =  134;
+elseif (OS == -30)
+    Omega_Phase_m =  155;
+end
+
+
+% P led udregning
+if (OS == 5)
+    P=10^( 60.3 / 20 )
+elseif (OS == -10)
+    P=10^( 58 / 20 )
+elseif (OS == -20)
+    P=10^( 59.9 / 20 )
+elseif (OS == -30)
+    P=10^( 61.6 / 20 )
+end
+
+figure
+bode(P*Gplant*G_moment_filter)
+grid on
+
+figure
+step(feedback(P*Gplant,G_moment_filter))
+grid on
+
+% I led udregning
+
+T = ( Omega_Phase_m / 10 )^-1
+
+%I = tf(( s + T^-1 ) / s )
+
+I = tf(( 1 ) / ( T * s ) )
+
+figure
+bode(P*(I+1)*Gplant*G_moment_filter)
+grid on
+
+figure
+step(feedback(P*(I+1)*Gplant, G_moment_filter))
+hold on
+step(feedback(P*(I+1), Gplant*G_moment_filter)/K_pwm) % PID value are ignoring PWM
+grid on
+
+% D led udregning
+
+% behøves ikke da båndbredden allerede er 816 rad/s og den ønsket var 60 rad/s så den er langt
+% over. Så kravet er overholdt.
+\end{verbatim}
+
+        \color{lightgray} \begin{verbatim}
+Zeta =
+
+    0.6901
+
+
+Phase_m =
+
+   71.6253
+
+
+ans =
+
+ -108.3747
+
+
+Omega_BW_min =
+
+   60.6531
+
+
+P =
+
+   1.0351e+03
+
+
+T =
+
+    0.0123
+
+
+I =
+ 
+      1
+  ---------
+  0.01225 s
+ 
+Continuous-time transfer function.
+
+\end{verbatim} \color{black}
+    
+\includegraphics [width=4in]{RolingRoad_02.eps}
+
+\includegraphics [width=4in]{RolingRoad_03.eps}
+
+\includegraphics [width=4in]{RolingRoad_04.eps}
+
+\includegraphics [width=4in]{RolingRoad_05.eps}
+
+
+\subsection*{Udregning af sample tid for PID regulatoren}
+
+\begin{verbatim}
+Ts_max=0.5/Omega_Phase_m
+Ts_min=0.15/Omega_Phase_m
+
+Fs_max=Ts_min^-1
+Fs_min=Ts_max^-1
+
+T_PSoC_max=c2d(P*(I+1)*Gplant,Ts_min,'tustin')
+
+T_PSoC_min=c2d(P*(I+1)*Gplant,Ts_max,'tustin')
+
+% bode plot af openloop
+figure
+bode(P*(I+1)*Gplant)
+hold on
+bode(T_PSoC_min*c2d(G_moment_filter,Ts_max,'tustin'));
+hold on
+bode(T_PSoC_max*c2d(G_moment_filter,Ts_min,'tustin'));
+grid on
+
+T_PSoC_min_feedback=feedback(T_PSoC_min,c2d(G_moment_filter,Ts_max,'tustin'));
+T_PSoC_max_feedback=feedback(T_PSoC_max,c2d(G_moment_filter,Ts_min,'tustin'));
+
+figure
+step(feedback(P*(I+1)*Gplant, G_moment_filter))
+hold on
+step(T_PSoC_min_feedback)
+step(T_PSoC_max_feedback)
+grid on
+
+figure
+bode(feedback(P*(I+1)*Gplant, G_moment_filter))
+hold on
+bode(T_PSoC_min_feedback)
+bode(T_PSoC_max_feedback)
+grid on
+\end{verbatim}
+
+        \color{lightgray} \begin{verbatim}
+Ts_max =
+
+   6.1275e-04
+
+
+Ts_min =
+
+   1.8382e-04
+
+
+Fs_max =
+
+        5440
+
+
+Fs_min =
+
+        1632
+
+
+T_PSoC_max =
+ 
+  0.09671 z^2 + 0.00144 z - 0.09527
+  ---------------------------------
+       z^2 - 1.953 z + 0.9525
+ 
+Sample time: 0.00018382 seconds
+Discrete-time transfer function.
+
+
+T_PSoC_min =
+ 
+  0.3107 z^2 + 0.01516 z - 0.2956
+  -------------------------------
+       z^2 - 1.85 z + 0.8501
+ 
+Sample time: 0.00061275 seconds
+Discrete-time transfer function.
+
+\end{verbatim} \color{black}
+    
+\includegraphics [width=4in]{RolingRoad_06.eps}
+
+\includegraphics [width=4in]{RolingRoad_07.eps}
+
+\includegraphics [width=4in]{RolingRoad_08.eps}
+
+
+\subsection*{PID konstanter}
+
+\begin{verbatim}
+if 0
+    KP=5.66
+    KI=137
+    KD=0;
+    Gpid=pid(KP,KI, KD, tf(Gplant), 1/f_PID)
+else
+    load('PID_data', 'C');
+    Gpid=C
+    clear 'C'
+end
+\end{verbatim}
+
+
+\subsection*{Delays - PWM signal og PID(inkluderet sampletiden)}
+
+
+        \color{lightgray} \begin{verbatim}
+Gpid =
+ 
+              Ts  
+  Kp + Ki * ------
+              z-1 
+
+  with Kp = 0.162, Ki = 24, Ts = 0.01
+ 
+Sample time: 0.01 seconds
+Discrete-time PI controller in parallel form.
+
+\end{verbatim} \color{black}
+    
+
+\subsection*{Krav godkendt?}
+
+\begin{verbatim}
+% Hastighed 18km/h max Kraft = 41.00N, min = 19.25N
+
+N_gen_18_max=Ea*18*(1000/3600)*Gear*(1/RR_r)
+E_mek_max=41*18*(1000/3600)
+E_mek_gen_max=N_gen_18_max*18*(1000/3600)
+E_mek_min=19.25*18*(1000/3600)
+%krav ikke godkendt til simulation run, kun konstant hastighed.
+
+% Hastighed 24.8km/h max Kraft = 49.37N, min = 21.76N
+
+N_gen_18_max=Ea*24.8*(1000/3600)*Gear*(1/RR_r)
+E_mek_max=49.37*24.8*(1000/3600)
+E_mek_gen_max=N_gen_18_max*24.8*(1000/3600)
+E_mek_min=21.76*24.8*(1000/3600)
+%krav ikke godkendt til simulation run, kun konstant hastighed. OBS der
+%sker overbelastning.
+
+% Hastighed 30km/h max Kraft = 65.27N, min = 22.59N
+
+N_gen_18_max=Ea*30*(1000/3600)*Gear*(1/RR_r)
+E_mek_max=65.27*30*(1000/3600)
+E_mek_gen_max=N_gen_18_max*30*(1000/3600)
+E_mek_min=22.59*30*(1000/3600)
+%krav ikke godkendt til simulation run, kun konstant hastighed. OBS der
+%sker overbelastning.
+
+MAX_RPM=30*(1000/3600)*(1/RR_r)*(60/(2*pi))
+MAX_T=65.27*RR_r
+
+
+% kan udfra analysen konkludere at RollingRoad kun kan klare at udføre test
+% på konstante hastigheder, og derfor kan kun bruges til at tjekke
+% nyttevirkning. Dette vil sige at der kan ikke laves test kørrelse på den.
+% Der skal findes en generator der kan tåle 550watt. Før simulation run kan
+% udføres, selvfølgelig er dette også lidt mistænkligt, da motoren kun
+% skulle kunne klare 200watt, men det skyldes at den skal helt der op i et
+% lille tidsrum.
+\end{verbatim}
+
+        \color{lightgray} \begin{verbatim}
+N_gen_18_max =
+ 
+        477
+  ---------------
+  1.203 s + 318.3
+ 
+Continuous-time transfer function.
+
+
+E_mek_max =
+
+   205
+
+
+E_mek_gen_max =
+ 
+       2385
+  ---------------
+  1.203 s + 318.3
+ 
+Continuous-time transfer function.
+
+
+E_mek_min =
+
+   96.2500
+
+
+N_gen_18_max =
+ 
+       657.2
+  ---------------
+  1.203 s + 318.3
+ 
+Continuous-time transfer function.
+
+
+E_mek_max =
+
+  340.1044
+
+
+E_mek_gen_max =
+ 
+       4527
+  ---------------
+  1.203 s + 318.3
+ 
+Continuous-time transfer function.
+
+
+E_mek_min =
+
+  149.9022
+
+
+N_gen_18_max =
+ 
+        795
+  ---------------
+  1.203 s + 318.3
+ 
+Continuous-time transfer function.
+
+
+E_mek_max =
+
+  543.9167
+
+
+E_mek_gen_max =
+ 
+       6625
+  ---------------
+  1.203 s + 318.3
+ 
+Continuous-time transfer function.
+
+
+E_mek_min =
+
+  188.2500
+
+
+MAX_RPM =
+
+   1.0471e+03
+
+
+MAX_T =
+
+    4.9605
+
+\end{verbatim} \color{black}
+    
+
+\subsection*{PID indstilling}
+
+\begin{verbatim}
+%Gplant=Gdelay*(1/100)*Gdelay_2*Ea*24.8*(1000/3600)
+
+G_system=feedback(Gpid*Gplant, 1)
+
+figure(2);
+step(G_system);
+grid on;
+hold on;
+figure(3);
+bode(G_system)
+grid on
+hold on
+\end{verbatim}
+
+        \color{lightgray} \begin{verbatim}Error using * (line 80)
+Sampling times must agree.
+
+Error in RolingRoad (line 242)
+G_system=feedback(Gpid*Gplant, 1)
+\end{verbatim} \color{black}
+    \begin{verbatim}
+pidTuner(G_system)
+pause
+G_system_new=feedback(C*Gplant, 1)
+
+
+figure(2);
+step(G_system_new);
+grid on;
+hold on;
+figure(3);
+bode(G_system_new)
+grid on
+hold on
+\end{verbatim}
+\begin{verbatim}
+save('PID_data', 'C');
+\end{verbatim}
+
+
+\subsection*{Udregning af filter koeficenter til Moment transducer}
+
+\begin{par}
+FIR eksampel
+\end{par} \vspace{1em}
+\begin{verbatim}
+clear
+close all
+clc
+
+fs=4000;
+fc=20; % den ændre sig ikke hurtigt, men vil gerne undgå støj kilder så som
+%        50Hz forsyning, derfor vælger vi at gå efter en knæk frekvens
+%        under 50Hz.
+
+
+N=250
+
+round(N*fc/fs)
+
+H=[ones(1,round(N*fc/fs)), zeros(1, N - 2*round(N*fc/fs)), ones(1,round(N*fc/fs) - 1)]
+
+
+h=fftshift(ifft(H)).*blackman(length(H))'
+
+figure
+freqz(h)
+figure
+impz(h)
+
+
+x=randn(1,10000)*1 + 10;
+
+y=conv(h, x);
+
+figure
+plot([0:10000-1]*fs^-1,x)
+hold on
+plot([0:10000-1]*fs^-1,y(1:10000))
+
+
+
+
+% det kan godt virke, dog er filter orden ret stor og vil kræve en masse
+% kraft og tid at udregne.
+
+%IIR eksample
+clear
+close all
+clc
+
+fs=4000;
+fc=5;
+
+fc/(fs/2)
+
+
+[b, a]=butter(2, fc/(fs/2), 'LOW')
+
+freqz(b,a)
+
+x=randn(1,10000)*1 + 10*sin(2*pi*0.1*[0:10000-1]*fs^-1);
+
+y=filter(b, a, x)
+
+plot([0:10000-1]*fs^-1,x)
+hold on
+plot([0:10000-1]*fs^-1,y)
+
+(fc*2*pi)^-1
+\end{verbatim}
+
+
+
+\end{document}
+    
