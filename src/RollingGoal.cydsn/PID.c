@@ -48,7 +48,7 @@ float *PID_tick(float sensor, float input, float RPM)
 {
     err = (input - sensor);
     
-    float P_RPM = (P_RPM_reciprocal / RPM == infinityf() ? P_RPM_reciprocal : P_RPM_reciprocal / RPM) ;
+    float P_RPM = (RPM <= 1.0f ? 0 : P_RPM_reciprocal / RPM) ;
 
     float PIDval = 0;
     
@@ -56,7 +56,7 @@ float *PID_tick(float sensor, float input, float RPM)
 	PIDval += P_RPM*parameter_.Kp*err;
     
     //intergral part
-    iState += P_RPM*parameter_.Kp*parameter_.Ki*err*dt + anti_windup_back_calc;
+    iState += P_RPM*parameter_.Kp*parameter_.Ki*err*dt + anti_windup_back_calc*dt;
 	PIDval += iState; 
 	
     //differentiel

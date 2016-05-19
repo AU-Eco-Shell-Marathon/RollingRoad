@@ -91,11 +91,7 @@ void ReceiveUARTData(void)
                 CyDelay(1);
                 SendUART("1 16 PID_antiwindup NAn\n");
                 CyDelay(1);
-                SendUART("1 17 PID_input NAn\n");
-                CyDelay(1);
-                SendUART("1 18 PID_sensor NAn\n");
-                CyDelay(1);
-                SendUART("1 19 Alpha_value_uint16 NAn\n");
+                SendUART("1 17 Alpha_value_uint16 NAn\n");
                 CyDelay(1);
                 #endif
                 char buf[50];
@@ -226,6 +222,23 @@ void SendData (struct data* Data,  float set_torque, float *PIDdebug)
     
     #if TEST == 0
     sprintf(buf, "3 %lu %f %f %f %f %f %f %f %lu %f %f %f %f %u\n\r", 
+        Data->time_ms,              //0
+        Data->P_motor,              //1
+        Data->P_mekanisk,           //2
+        Data->efficiency,           //3
+        set_torque,                 //4
+        TorqueToForce*set_torque,   //5
+        TorqueToForce*Data->Moment, //6
+        Data->Moment,               //7
+        Data->distance,             //8
+        RPM_To_Speed*Data->RPM,     //9
+        Data->RPM,                  //10
+        Data->V_motor,              //11
+        Data->A_motor,              //12
+        Data->stop                  //13
+    );
+    #else
+    sprintf(buf, "3 %lu %f %f %f %f %f %f %f %lu %f %f %f %f %u %f %f %f %lu\n\r", 
         Data->time_ms,              //Tid (ms)
         Data->P_motor,              //effect (P)
         Data->P_mekanisk,           
@@ -239,29 +252,10 @@ void SendData (struct data* Data,  float set_torque, float *PIDdebug)
         Data->RPM,
         Data->V_motor,
         Data->A_motor, 
-        Data->stop
-    );
-    #else
-    sprintf(buf, "3 %lu %f %f %f %f %f %f %f %lu %f %f %f %f %u %f %f %f %f %f %lu\n\r", 
-        Data->time_ms,              //Tid (ms)
-        Data->P_motor,              //effect (P)
-        Data->P_mekanisk,           
-        Data->efficiency,           
-        set_torque,                   //set Force (N)
-        TorqueToForce*set_torque,                   //set Force (N)
-        TorqueToForce(Data->Moment),//Force (N)
-        Data->Moment,               //Moment (Nm)
-        Data->distance, 
-        RPMToSpeed(Data->RPM),      //Moment (m/s)
-        Data->RPM,
-        Data->V_motor,
-        Data->A_motor, 
         Data->stop,
         PIDdebug[0],//pidval
         PIDdebug[1], //err
         PIDdebug[2],//antiwindup
-        PIDinput, //input
-        PIDsensor, //sensor
         (uint32)Data->Alpha
     );
     #endif

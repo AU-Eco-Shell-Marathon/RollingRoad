@@ -24,8 +24,8 @@ void DMA_setup_DelSig();
 uint16  Alpha_ = 0x00FF;
 int32   y_V_motor = 0,
         y_A_motor = 0,
-        y_Moment = 0,
-        y_RPM = 0;
+        y_Moment = 0;
+uint32  y_RPM = 0;
 
 int32   V_motor_offset = 0,
         A_motor_offset = 0,
@@ -90,7 +90,7 @@ CY_ISR(SAR_ADC_1)
     y_V_motor = (int32)(((int32)Alpha_*(int32)ADC_SAR_Seq_1_GetResult16(0) + (int32)(65536u-Alpha_)*y_V_motor)>>16);
     y_A_motor = (int32)(((int32)Alpha_*(int32)ADC_SAR_Seq_1_GetResult16(1) + (int32)(65536u-Alpha_)*y_A_motor)>>16);
     y_Moment = (int32)(((int32)Alpha_*(int32)Moment_temp + (int32)(65536u-Alpha_)*y_Moment)>>16);
-    y_RPM = (int32)(((int32)Alpha_*(int32)RPM_temp + (int32)(65536u-Alpha_)*y_RPM)>>16);
+    y_RPM = (uint32)(((uint64)Alpha_*(uint64)RPM_temp + (uint64)(65536u-Alpha_)*(uint64)y_RPM)>>16);
 }
 
 char RPM_reset=0;
@@ -206,10 +206,9 @@ char getData(struct data * Data)
     Data->P_mekanisk    = Data->Moment * Data->RPM * RPM_Nm_To_W;
     Data->P_motor       = Data->A_motor * Data->V_motor;
     
-    Data->efficiency    = (Data->P_mekanisk / Data->P_motor) * 100.0f;
     
-    if(Data->efficiency == infinityf() || Data->efficiency == -infinityf())
-        Data->efficiency= 0;
+    
+    Data->efficiency    = (Data->P_motor != 0.0f ? (Data->P_mekanisk / Data->P_motor) * 100.0f : 0.0f);
     
     Data->distance      = (uint32)((2.0f*PI*RR_radius*(float)Counter_1_ReadCounter())/360.0f);
     Data->time_ms       = Counter_2_ReadCounter();
