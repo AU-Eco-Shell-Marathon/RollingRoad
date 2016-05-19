@@ -12,20 +12,19 @@
 #include "ControllerClass.h"
 #include <project.h>
 #include <stdio.h>
+#include "Constants.h"
 
 CY_ISR_PROTO(PID_isr);
 
-float set_force=0.0f;
+float set_torque=0.0f;
 char busy = 0;
 
 //debug 
 float *PIDdebug;
-float Moment_debug;
 
 CY_ISR(PID_isr)
 {  
-    Moment_debug = getMoment();
-    PIDdebug = PID_tick(Moment_debug, ForceToMoment(set_force));
+    PIDdebug = PID_tick(getMoment(), set_torque, getRPM());
 }
 
 CY_ISR(SendData_ISR)
@@ -42,7 +41,7 @@ void run()
     struct data Data;
     if(getData(&Data) && !busy)
     {
-        SendData(&Data, set_force, ForceToMoment(set_force), Moment_debug, PIDdebug);
+        SendData(&Data, set_torque, PIDdebug);
         busy = 1;
     }
 }
@@ -65,7 +64,7 @@ void calibrate()
 }
 
 
-void update(const struct PIDparameter * parameter, const float * Force, char restart)
+void update(const struct PIDparameter * parameter, const float * torque, char restart)
 {
     if(parameter != NULL)
     {    
@@ -73,10 +72,10 @@ void update(const struct PIDparameter * parameter, const float * Force, char res
         EEPROM_write(0, (uint8*)parameter);
     }
     
-    if(Force != NULL)
+    if(torque != NULL)
     {
-        set_force=*Force;
-        EEPROM_write(1, (uint8*)Force);
+        set_torque=*torque;
+        EEPROM_write(1, (uint8*)torque);
     }
     
     
@@ -108,7 +107,7 @@ void init()
     PID_init();
     
     EEPROM_read(0,(uint8*)getPID_ptr());
-    EEPROM_read(1,(uint8*)&set_force);
+    EEPROM_read(1,(uint8*)&set_torque);
     
     isr_4_StartEx(PID_isr);
     Clock_4_Start();

@@ -6,12 +6,12 @@
 #include <stdlib.h>
 #include <project.h>
 #include "sensor.h"
-
+    
 //Functions
 void InitUart();
 char CheckConnection(void);
 void ReceiveUARTData();
 void SendUART(char *Pdata);
-void SendData(struct data* Data,  float setForce, float PIDinput, float PIDsensor, float *PIDdebug);
+void SendData(struct data* Data,  float set_torque, float *PIDdebug);
 
 #endif

@@ -21,7 +21,7 @@
 
 void run();
 void stop();
-void update(const struct PIDparameter *, const float * Force, char restart);
+void update(const struct PIDparameter *, const float * torque, char restart);
 void init();
 void calibrate();
 

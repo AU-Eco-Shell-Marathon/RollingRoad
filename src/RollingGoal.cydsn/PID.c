@@ -11,12 +11,13 @@
 */
 #include "PID.h"
 #include <project.h>
+#include <Math.h>
+#include "Constants.h"
 #define kb 1
 
 
 static struct PIDparameter parameter_;
 
-//float PIDval = 0;
 float dt = dt_def;
 float iState = 0;
 float anti_windup_back_calc = 0;
@@ -35,8 +36,6 @@ void PID_init()
     parameter_.Kd = Kd_def;
     parameter_.MAX = MAX_def;
     parameter_.MIN = MIN_def;
-    parameter_.iMAX = iMAX_def;
-    parameter_.iMIN = iMIN_def;
     
     PWM_1_Start();
     PWM_1_WriteCompare((unsigned char)parameter_.MIN);
@@ -45,26 +44,26 @@ void PID_init()
 
 float PID_debug[3];
 
-float *PID_tick(float sensor, float input)
+float *PID_tick(float sensor, float input, float RPM)
 {
+    err = (input - sensor);
+    
+    float P_RPM = (P_RPM_reciprocal / RPM == infinityf() ? P_RPM_reciprocal : P_RPM_reciprocal / RPM) ;
+
     float PIDval = 0;
     
-    err = (input - sensor);
-	
-    PID_debug[1] = err;
+	//Proportional part
+	PIDval += P_RPM*parameter_.Kp*err;
     
-	PIDval += parameter_.Kp*err; //Proportional calc.
+    //intergral part
+    iState += P_RPM*parameter_.Kp*parameter_.Ki*err*dt + anti_windup_back_calc;
+	PIDval += iState; 
 	
-    
-    iState += parameter_.Ki*err*dt + anti_windup_back_calc;
-    
-    
-	PIDval += iState; //intergral calc
-	
-	PIDval += parameter_.Kd*((err-pre_err)/dt); //differentiel calc
-	
+    //differentiel
+	PIDval += P_RPM*parameter_.Kp*parameter_.Kd*((err-pre_err)/dt);
 	pre_err = err;
 	
+    //anti windup back calculation
     anti_windup_back_calc = PIDval;
     
 	if(PIDval > parameter_.MAX)
@@ -73,12 +72,15 @@ float *PID_tick(float sensor, float input)
         PIDval = parameter_.MIN;
 	
     anti_windup_back_calc = PIDval - anti_windup_back_calc;
+    // --- //
     
-    PID_debug[2] = anti_windup_back_calc;
-    
-    PID_debug[0] = PIDval;
-    
+    //use PIDval
 	PWM_1_WriteCompare((uint8)PIDval);
+    
+    //Debug
+    PID_debug[0] = PIDval;
+    PID_debug[1] = err;
+    PID_debug[2] = anti_windup_back_calc;
     return PID_debug;
 }
 

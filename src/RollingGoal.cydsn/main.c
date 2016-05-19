@@ -9,15 +9,12 @@
  *
  * ========================================
 */
-#define TEST ON
 #include <project.h>
 #include "ControllerClass.h"
 
 int main()
 {
-    
 
-    /* Place your initialization/startup code here (e.g. MyInst_Start()) */
     init();
     
     for(;;)

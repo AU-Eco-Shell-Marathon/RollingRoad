@@ -9,7 +9,12 @@
  *
  * ========================================
 */
+#ifndef CONSTANTS_H
+    #define CONSTANTS_H
 
+#define TEST 0 
+    
+    
 #define PI 3.141592654f
 #define RR_radius 0.076f
 #define RR_radius_reciprocal 13.15789474f
@@ -20,24 +25,15 @@
 #define VoltToVolt 11
 #define VoltToCurrent 24
 #define VoltToTorque 2
-#define N 128u
-
-// help functions
-
-float MomentToForce(float Moment_value)
-{
-    return Moment_value * RR_radius_reciprocal;
-}
-
-float ForceToMoment(float Force_value)
-{
-    return Force_value * RR_radius;
-}
-
-float RPMToSpeed(float RPM_value)
-{
-    return RPM_value * RPM_To_Speed;
-}
-
-
+#define TorqueToForce RR_radius_reciprocal
+#define ForceToTorque RR_radius
+    // PID //
+#define P_RPM_reciprocal 188.7451117f
+#define Kp_def 1035.1f;
+#define Ki_def 81.6327f;
+#define Kd_def 0.0f;
+#define MAX_def 255.0f;
+#define MIN_def 0.0f;
+#define dt_def 0.0005f;    
+#endif
 /* [] END OF FILE */

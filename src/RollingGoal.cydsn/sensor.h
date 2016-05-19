@@ -15,43 +15,29 @@
     
 #include <project.h>
 
-struct sample
-{
-    float avg;
-    float rms;
-    float min;
-    float max;
-};
 
+    
 struct data
 {
-    struct sample V_motor;
-    struct sample A_motor;
-    struct sample P_motor;
-    struct sample RPM;
-    struct sample Moment;
-    struct sample P_mekanisk;
-    struct sample efficiency;
+    float V_motor;
+    float A_motor;
+    float P_motor;
+    float RPM;
+    float Moment;
+    float P_mekanisk;
+    float efficiency;
     uint32 distance;
     uint16 Alpha;
-    float maxRMS;
     uint32 time_ms;
     char stop;
-};
-
-
-char getData(struct data *);
-float getMoment();
-int32 getDistance(char reset);
-
-void setSNRdB(float SNRdB);
-
+};    
+    
 void sensor_init(int32 VM, int32 AM, int32 moment);
 void sensor_calibrate(int32* VM, int32* AM, int32* moment);
-float MomentToForce(float Moment_value);
-float ForceToMoment(float Force_value);
-float RPMToSpeed(float RPM_value);
-
+char getData(struct data *);
+float getMoment();
+float getRPM();
+int32 getDistance(char reset);
 
 #endif
 

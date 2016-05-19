@@ -86,8 +86,6 @@ char EEPROM_init(const size_t * types, uint8 count)
         return -1;   //EEPROM er ikke stor nok.
     }
     
-    
-    
     return 1;
 }
 
