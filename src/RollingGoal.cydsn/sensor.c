@@ -21,11 +21,11 @@ void DMA_setup_DelSig();
 
 //global variables
 
-uint16  Alpha_ = 0x00FF;
+uint8  Alpha_ = 0x0F;
 int32   y_V_motor = 0,
         y_A_motor = 0,
         y_Moment = 0;
-uint32  y_RPM = 0;
+uint64  y_RPM = 0;
 
 int32   V_motor_offset = 0,
         A_motor_offset = 0,
@@ -87,10 +87,14 @@ void DMA_setup_DelSig()
 
 CY_ISR(SAR_ADC_1)
 {
-    y_V_motor = (int32)(((int32)Alpha_*(int32)ADC_SAR_Seq_1_GetResult16(0) + (int32)(65536u-Alpha_)*y_V_motor)>>16);
-    y_A_motor = (int32)(((int32)Alpha_*(int32)ADC_SAR_Seq_1_GetResult16(1) + (int32)(65536u-Alpha_)*y_A_motor)>>16);
-    y_Moment = (int32)(((int32)Alpha_*(int32)Moment_temp + (int32)(65536u-Alpha_)*y_Moment)>>16);
-    y_RPM = (uint32)(((uint64)Alpha_*(uint64)RPM_temp + (uint64)(65536u-Alpha_)*(uint64)y_RPM)>>16);
+    y_V_motor = (((int32)Alpha_*(int32)ADC_SAR_Seq_1_GetResult16(0))<<8) + (int32)(((int64)(256u-Alpha_)*(int64)y_V_motor)>>8) + (int32)1;
+    //               (8bit + 12bit + 8bit = 28bit)                       +    (8bit + 28bit -8 = 28bit) ==> 28bit < 32bit ==> ok
+    y_A_motor = (((int32)Alpha_*(int32)ADC_SAR_Seq_1_GetResult16(1))<<8) + (int32)(((int64)(256u-Alpha_)*(int64)y_A_motor)>>8) + (int32)1;
+    //               (8bit + 12bit + 8bit = 28bit)                       +    (8bit + 28bit -8 = 28bit) ==> 28bit < 32bit ==> ok
+    y_Moment = (((int32)Alpha_*(int32)Moment_temp)<<8) + (int32)(((int64)(256u-Alpha_)*(int64)y_Moment)>>8) + (int32)1;
+    //               (8bit + 16bit + 8bit = 32bit)     +    (8bit + 32bit -8 = 32bit) ==> 32bit < 32bit ==> ok
+    y_RPM = (((uint64)Alpha_*(uint64)RPM_temp)<<8) + (((uint64)(256u-Alpha_)*y_RPM)>>8) +(uint64)1;
+    //               (8bit + 32bit + 8bit = 48bit)     +    (8bit + 48bit -8 = 48bit) ==> 48bit < 64bit ==> ok
 }
 
 char RPM_reset=0;
@@ -176,8 +180,8 @@ void sensor_calibrate(int32* VM, int32* AM, int32* moment)
     A_motor_offset = 0;
     Moment_offset = 0;
     
-    uint16 Alpha_temp = Alpha_;
-    Alpha_ = 0x000F;
+    uint8 Alpha_temp = Alpha_;
+    Alpha_ = 1;
     
     uint32 CurrentTime = Counter_2_ReadCounter();
     
@@ -198,10 +202,12 @@ void sensor_calibrate(int32* VM, int32* AM, int32* moment)
 char getData(struct data * Data)
 {
  
-    Data->A_motor       =  ADC_SAR_Seq_1_CountsTo_Volts(y_A_motor - A_motor_offset)*VoltToCurrent;
-    Data->V_motor       =  ADC_SAR_Seq_1_CountsTo_Volts(y_V_motor - V_motor_offset)*VoltToVolt;
-    Data->Moment        =  (ADC_DelSig_1_CountsTo_Volts(y_Moment - Moment_offset) > 0.0f ? ADC_DelSig_1_CountsTo_Volts(y_Moment - Moment_offset) : -ADC_DelSig_1_CountsTo_Volts(y_Moment - Moment_offset))*VoltToTorque;
-    Data->RPM           =  (float)y_RPM / 1000.0f;
+    Data->A_motor       =  ADC_SAR_Seq_1_CountsTo_Volts((int16)((y_A_motor - A_motor_offset)>>16))*VoltToCurrent;
+    Data->V_motor       =  ADC_SAR_Seq_1_CountsTo_Volts((int16)((y_V_motor - V_motor_offset)>>16))*VoltToVolt;
+    
+    float tmp = ADC_DelSig_1_CountsTo_Volts((int32)((y_Moment-Moment_offset)>>16));
+    Data->Moment        =  (tmp > 0.0f ? tmp : -tmp )*VoltToTorque;
+    Data->RPM           =  (float)((uint32)(y_RPM>>16)) / 1000.0f;
     
     Data->P_mekanisk    = Data->Moment * Data->RPM * RPM_Nm_To_W;
     Data->P_motor       = Data->A_motor * Data->V_motor;
@@ -220,12 +226,14 @@ char getData(struct data * Data)
 
 float getMoment()
 {
-    return (ADC_DelSig_1_CountsTo_Volts(y_Moment - Moment_offset) > 0.0f ? ADC_DelSig_1_CountsTo_Volts(y_Moment - Moment_offset) : -ADC_DelSig_1_CountsTo_Volts(y_Moment - Moment_offset))*VoltToTorque;
+    float tmp = ADC_DelSig_1_CountsTo_Volts(Moment_temp - (int32)(Moment_offset>>16));
+    
+    return (tmp > 0.0f ? tmp : -tmp )*VoltToTorque;
 }
 
 float getRPM()
 {
-    return (float)y_RPM / 1000.0f;
+    return (float)RPM_temp / 1000.0f;
 }
 
 int32 getDistance(char reset)
