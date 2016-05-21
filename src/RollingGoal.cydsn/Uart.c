@@ -169,7 +169,7 @@ void ReceiveUARTData(void)
             update(NULL,NULL,1);
             buf[buf_n+1]=0;
         }
-        else if(buf[0]=='7') //modtag Force fra PC
+        else if(buf[0]=='8') //modtag Force fra PC
         {
             
             float torque = 0;
