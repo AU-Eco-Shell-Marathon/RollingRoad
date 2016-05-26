@@ -76,5 +76,7 @@ end
 
 figure
 contourf(Speeds,Force,sample',10)
+xlabel('Speeds (m/s)')
+ylabel('Force (N)');
 figure
 meshc(Speeds,Force,sample')
