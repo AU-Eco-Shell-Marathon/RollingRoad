@@ -15,15 +15,15 @@
 
 
 #include "PID.h"
-#include "sensor.h"
-#include "Uart.h"
+#include "Sensor.h"
+#include "UART.h"
 #include "EEPROM.h"
 
-void run();
-void stop();
-void update(const struct PIDparameter *, const float * torque, char restart);
-void init();
-void calibrate();
+void ControllerClass_run();
+void ControllerClass_stop();
+void ControllerClass_update(const struct PIDparameter *, const float * torque, char restart);
+void ControllerClass_init();
+void ControllerClass_calibrate();
 
 #endif
 /* [] END OF FILE */

@@ -24,7 +24,7 @@ struct PIDparameter
 
 void PID_init();
 float* PID_tick(float sensor, float input, float RPM);
-void setPID(const struct PIDparameter * parameter);
-struct PIDparameter *getPID_ptr();
+void PID_set(const struct PIDparameter * parameter);
+struct PIDparameter *PID_getPtr();
 #endif
 /* [] END OF FILE */

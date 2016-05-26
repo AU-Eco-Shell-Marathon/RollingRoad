@@ -32,12 +32,12 @@ struct data
     char stop;
 };    
     
-void sensor_init(int32 VM, int32 AM, int32 moment);
-void sensor_calibrate(int32* VM, int32* AM, int32* moment);
-char getData(struct data *);
-float getMoment();
-float getRPM();
-int32 getDistance(char reset);
+void Sensor_init(int32 VM, int32 AM, int32 moment);
+void Sensor_calibrate(int32* VM, int32* AM, int32* moment);
+char Sensor_getData(struct data *);
+float Sensor_getMoment();
+float Sensor_getRPM();
+int32 Sensor_getDistance(char reset);
 
 #endif
 

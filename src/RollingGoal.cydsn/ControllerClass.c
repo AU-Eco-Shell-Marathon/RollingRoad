@@ -24,51 +24,51 @@ float *PIDdebug;
 
 CY_ISR(PID_isr)
 {  
-    PIDdebug = PID_tick(getMoment(), set_torque, getRPM());
+    PIDdebug = PID_tick(Sensor_getMoment(), set_torque, Sensor_getRPM());
 }
 
-CY_ISR(SendData_ISR)
+CY_ISR(UART_sendData_ISR)
 {
 
     busy = 0;
 }
 
-void run()
+void ControllerClass_run()
 {
     
-    ReceiveUARTData(); 
+    UART_receiveUARTData(); 
     
     struct data Data;
-    if(getData(&Data) && !busy)
+    if(Sensor_getData(&Data) && !busy)
     {
-        SendData(&Data, set_torque, PIDdebug);
+        UART_sendData(&Data, set_torque, PIDdebug);
         busy = 1;
     }
 }
 
-void stop()
+void ControllerClass_stop()
 {
     
     
 }
 
-void calibrate()
+void ControllerClass_calibrate()
 {
     
     int32 Offset[3];
 
-    sensor_calibrate(&Offset[0], &Offset[1], &Offset[2]);
+    Sensor_calibrate(&Offset[0], &Offset[1], &Offset[2]);
     
     EEPROM_write(2, (uint8*)Offset);
     
 }
 
 
-void update(const struct PIDparameter * parameter, const float * torque, char restart)
+void ControllerClass_update(const struct PIDparameter * parameter, const float * torque, char restart)
 {
     if(parameter != NULL)
     {    
-        setPID(parameter);
+        PID_set(parameter);
         EEPROM_write(0, (uint8*)parameter);
     }
     
@@ -82,16 +82,16 @@ void update(const struct PIDparameter * parameter, const float * torque, char re
     if(restart)
     {
         Control_Reg_1_Write(0b1);
-        getDistance(0b1);
+        Sensor_getDistance(0b1);
     }
     
 }
 
-void init()
+void ControllerClass_init()
 {
     TX_AND_POWER_Write(0);
     CyGlobalIntEnable; /* Enable global interrupts. */
-    InitUart();
+    UART_init();
     
     size_t sizes[] = {sizeof(struct PIDparameter), sizeof(float), sizeof(int32[3])};
    
@@ -100,20 +100,20 @@ void init()
     int32 Offset[3];
     
     if(EEPROM_read(2, (uint8*)Offset))
-        sensor_init(Offset[0],Offset[1],Offset[2]);
+        Sensor_init(Offset[0],Offset[1],Offset[2]);
     else
-        sensor_init(0,0,0);
+        Sensor_init(0,0,0);
     
     PID_init();
     
-    EEPROM_read(0,(uint8*)getPID_ptr());
+    EEPROM_read(0,(uint8*)PID_getPtr());
     EEPROM_read(1,(uint8*)&set_torque);
     
     isr_4_StartEx(PID_isr);
     Clock_4_Start();
     
     Clock_5_Start();
-    isr_5_StartEx(SendData_ISR);
+    isr_5_StartEx(UART_sendData_ISR);
     
     
     TX_AND_POWER_Write(1);

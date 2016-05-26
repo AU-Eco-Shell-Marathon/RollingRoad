@@ -24,7 +24,7 @@ float anti_windup_back_calc = 0;
 float err = 0;
 float pre_err = 0;
 
-struct PIDparameter *getPID_ptr()
+struct PIDparameter *PID_getPtr()
 {
     return &parameter_;
 }
@@ -84,7 +84,7 @@ float *PID_tick(float sensor, float input, float RPM)
     return PID_debug;
 }
 
-void setPID(const struct PIDparameter * parameter)
+void PID_set(const struct PIDparameter * parameter)
 {
     parameter_ = *parameter;
 }

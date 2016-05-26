@@ -15,11 +15,11 @@
 int main()
 {
 
-    init();
+    ControllerClass_init();
     
     for(;;)
     {
-        run();
+        ControllerClass_run();
     }
 }
 

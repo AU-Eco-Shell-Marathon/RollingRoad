@@ -8,10 +8,10 @@
 #include "sensor.h"
     
 //Functions
-void InitUart();
-char CheckConnection(void);
-void ReceiveUARTData();
-void SendUART(char *Pdata);
-void SendData(struct data* Data,  float set_torque, float *PIDdebug);
+void UART_init();
+char UART_checkConnection(void);
+void UART_receiveUARTData();
+void UART_send(char *Pdata);
+void UART_sendData(struct data* Data,  float set_torque, float *PIDdebug);
 
 #endif

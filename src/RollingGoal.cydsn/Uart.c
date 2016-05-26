@@ -1,5 +1,5 @@
 ﻿#include <project.h>
-#include "Uart.h"
+#include "UART.h"
 #include "ControllerClass.h"
 #include "PID.h"
 #include "sensor.h"
@@ -16,27 +16,28 @@ char handshake[] = "0 RollingRoad\n";
 char torque[20];
 char modtaget[64];
 
-void InitUart(void)
+void UART_init(void)
 {
     USBUART_1_Start(0, USBUART_1_5V_OPERATION);
     
-    while(CheckConnection()==0u);
+    while(UART_checkConnection()==0u);
 
 }
 
-char CheckConnection(void)
+char UART_checkConnection(void)
 {
     if(USBUART_1_IsConfigurationChanged() == 0)
         return 0;
     if(USBUART_1_GetConfiguration() == 0)
         return 0;
-    USBUART_1_CDC_Init();  
+    
+    USBUART_1_CDC_Init();
     return 1;
 }
 
-void ReceiveUARTData(void)
+void UART_receiveUARTData(void)
 {
-    CheckConnection();
+    UART_checkConnection();
     
     if(USBUART_1_GetConfiguration() == 0)
         return;
@@ -52,46 +53,46 @@ void ReceiveUARTData(void)
             if(strncmp((char*)buf, handshake, sizeof(handshake))==0)
             {
                 
-                struct PIDparameter PIDval = *getPID_ptr();
+                struct PIDparameter PIDval = *PID_getPtr();
                 
-	            SendUART(handshake);
+	            UART_send(handshake);
                 CyDelay(1);
-                SendUART("1 0 Time ms\n");
+                UART_send("1 0 Time ms\n");
                 CyDelay(1);
-                SendUART("1 1 Effect(EL) W\n");
+                UART_send("1 1 Effect(EL) W\n");
                 CyDelay(1);
-                SendUART("1 2 Effect(MEK) W\n");
+                UART_send("1 2 Effect(MEK) W\n");
                 CyDelay(1);
-                SendUART("1 3 efficiency procent\n");
+                UART_send("1 3 efficiency procent\n");
                 CyDelay(1);
-                SendUART("1 4 set_Torque N\n");
+                UART_send("1 4 set_Torque N\n");
                 CyDelay(1);
-                SendUART("1 5 set_Force N\n");
+                UART_send("1 5 set_Force N\n");
                 CyDelay(1);
-                SendUART("1 6 Force N\n");
+                UART_send("1 6 Force N\n");
                 CyDelay(1);
-                SendUART("1 7 Moment Nm\n");
+                UART_send("1 7 Moment Nm\n");
                 CyDelay(1);
-                SendUART("1 8 distance m\n");
+                UART_send("1 8 distance m\n");
                 CyDelay(1);
-                SendUART("1 9 Speed m/s\n");
+                UART_send("1 9 Speed m/s\n");
                 CyDelay(1);
-                SendUART("1 10 Rotation RPM\n");
+                UART_send("1 10 Rotation RPM\n");
                 CyDelay(1);
-                SendUART("1 11 V_Motor V\n");
+                UART_send("1 11 V_Motor V\n");
                 CyDelay(1);
-                SendUART("1 12 A_Motor A\n");
+                UART_send("1 12 A_Motor A\n");
                 CyDelay(1);
-                SendUART("1 13 Error bool\n");
+                UART_send("1 13 Error bool\n");
                 CyDelay(1);
                 #if TEST == 1
-                SendUART("1 14 PID_value NAn\n");
+                UART_send("1 14 PID_value NAn\n");
                 CyDelay(1);
-                SendUART("1 15 PID_error NAn\n");
+                UART_send("1 15 PID_error NAn\n");
                 CyDelay(1);
-                SendUART("1 16 PID_antiwindup NAn\n");
+                UART_send("1 16 PID_antiwindup NAn\n");
                 CyDelay(1);
-                SendUART("1 17 Alpha_value_uint16 NAn\n");
+                UART_send("1 17 Alpha_value_uint16 NAn\n");
                 CyDelay(1);
                 #endif
                 char buf[50];
@@ -100,11 +101,9 @@ void ReceiveUARTData(void)
                     PIDval.Ki,
                     PIDval.Kd
                 );
-                SendUART(buf);
+                UART_send(buf);
                 
                 isReadyToSend = 1;
-               // CyDelay(100);    HUSK AT OPDATER MED SENESTE PROTOKOL
-               // SendData((uint8*)"1 2 Voltage Volt\n");
             }
         }
         
@@ -135,7 +134,7 @@ void ReceiveUARTData(void)
             }
             
             torque = atof((char*)buf+2);
-			update(NULL, &torque, 0);
+			ControllerClass_update(NULL, &torque, 0);
         }
         else if(buf[0]=='5') // PID regulations
         {
@@ -145,31 +144,27 @@ void ReceiveUARTData(void)
             atoi(strtok((char *)buf," "));
             for(i = 0; i<3 ;i++)
             {
-                PID[i] = atof(strtok(NULL, " "));//eventuelt bare NULL istedet for (char *)buf
+                PID[i] = atof(strtok(NULL, " "));
             }
-            struct PIDparameter PIDval = *getPID_ptr();
+            struct PIDparameter PIDval = *PID_getPtr();
             
             PIDval.Kp = PID[0]; PIDval.Ki = PID[1]; PIDval.Kd = PID[2]; PIDval.valid = 1;
             
-            update(&PIDval, NULL, 0);
+            ControllerClass_update(&PIDval, NULL, 0);
             
         }
-        else if(buf[0]=='6') // calibrate
+        else if(buf[0]=='6')
         {
-            calibrate();//skal fjernes
+            ControllerClass_calibrate();
             buf[buf_n+1]=0;
-            
-//            if(strcmp((char*)buf, "6\n")==0)
-//            {
-//               calibrate();
-//            }
+
         }
-        else if(buf[0]=='7') // reset
+        else if(buf[0]=='7')
         {
-            update(NULL,NULL,1);
+            ControllerClass_update(NULL,NULL,1);
             buf[buf_n+1]=0;
         }
-        else if(buf[0]=='8') //modtag Force fra PC
+        else if(buf[0]=='8')
         {
             
             float torque = 0;
@@ -185,17 +180,16 @@ void ReceiveUARTData(void)
                     break;
                 }
             }
+
             
-            //strtok((char*)buf, " ");
-            
-            torque = atof((char*)buf+2) * ForceToTorque;            //Fjern udkommentering når det kopieres over
-			update(NULL, &torque, 0);
+            torque = atof((char*)buf+2) * ForceToTorque;
+			ControllerClass_update(NULL, &torque, 0);
         }
         
     }
 }
 
-void SendUART (char *Pdata)
+void UART_send (char *Pdata)
 {
 
     while(USBUART_1_CDCIsReady() == 0u);
@@ -203,12 +197,12 @@ void SendUART (char *Pdata)
     return;
 }
 
-void SendData (struct data* Data,  float set_torque, float *PIDdebug)
+void UART_sendData (struct data* Data,  float set_torque, float *PIDdebug)
 {
     if(isReadyToSend == 0)
         return;
     
-    CheckConnection();
+    UART_checkConnection();
     
     if (USBUART_1_GetConfiguration() == 0u)
         return;
@@ -259,7 +253,7 @@ void SendData (struct data* Data,  float set_torque, float *PIDdebug)
         (uint32)Data->Alpha
     );
     #endif
-    SendUART(buf);
+    UART_send(buf);
 }
 
 /* [] END OF FILE */

@@ -9,13 +9,12 @@
  *
  * ========================================
 */
-#include "sensor.h"
+#include "Sensor.h"
 #include <Math.h>
 #include "Constants.h"
 
 //prototypes
 CY_ISR_PROTO(SAR_ADC_1);
-CY_ISR_PROTO(SAR_ADC_2);
 CY_ISR_PROTO(RPM_isr);
 void DMA_setup_DelSig();
 
@@ -139,7 +138,7 @@ CY_ISR(RPM_isr)
     Timer_1_ClearFIFO();
 }
 
-void sensor_init(int32 VM, int32 AM, int32 moment)
+void Sensor_init(int32 VM, int32 AM, int32 moment)
 {
     DMA_setup_DelSig();
     
@@ -174,7 +173,7 @@ void sensor_init(int32 VM, int32 AM, int32 moment)
     
 }
 
-void sensor_calibrate(int32* VM, int32* AM, int32* moment)
+void Sensor_calibrate(int32* VM, int32* AM, int32* moment)
 {
     V_motor_offset = 0;
     A_motor_offset = 0;
@@ -199,7 +198,7 @@ void sensor_calibrate(int32* VM, int32* AM, int32* moment)
     
 }
 
-char getData(struct data * Data)
+char Sensor_getData(struct data * Data)
 {
  
     Data->A_motor       =  ADC_SAR_Seq_1_CountsTo_Volts((int16)((y_A_motor - A_motor_offset)>>16))*VoltToCurrent;
@@ -224,19 +223,19 @@ char getData(struct data * Data)
     return 1;
 }
 
-float getMoment()
+float Sensor_getMoment()
 {
     float tmp = ADC_DelSig_1_CountsTo_Volts(Moment_temp - (int32)(Moment_offset>>16));
     
     return (tmp > 0.0f ? tmp : -tmp )*VoltToTorque;
 }
 
-float getRPM()
+float Sensor_getRPM()
 {
     return (float)RPM_temp / 1000.0f;
 }
 
-int32 getDistance(char reset)
+int32 Sensor_getDistance(char reset)
 {
     if(reset)
     {
