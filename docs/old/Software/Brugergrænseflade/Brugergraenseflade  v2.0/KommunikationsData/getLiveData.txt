@@ -1,0 +1,5 @@
+Moment = xx Nm
+Hastighed = xx rad/sek
+Virkningsgrad = xx %
+Elektrisk effekt = xx W
+Mekanisk effekt = xx W

@@ -1,0 +1,45 @@
+#!/bin/bash
+
+hovedMenu()
+{
+    clear
+    echo -e "\033[1m ------------------------------------- \033[0m"
+    echo -e "\033[1m Hovedmenu \033[0m"
+    echo -e "\033[1m ------------------------------------- \033[0m"
+    echo "[1] Test med konstant moment"
+    echo "[2] Gem datahistorik"
+    echo "[3] Luk Brugergraenseflade"
+    echo -e "\033[1m ===================================== \033[0m"
+    echo -n "Indtast oensket menu [1-3]: "; echo "";
+}
+
+testMoment()
+{
+    clear
+    echo -e "\033[1m ------------------------------------- \033[0m"
+    echo -e "\033[1m Test med konstant moment \033[0m"
+    echo -e "\033[1m ------------------------------------- \033[0m"
+    echo "[1] Oeg moment, 1Nm" ; 
+    echo "[2] Saenk moment, 1Nm" ;
+    echo "[3] Oeg moment, 0.1Nm" ;
+    echo "[4] Saenk moment, 0.1Nm" ;
+    echo "[5] Start test" ;
+    echo "[6] Stop test" ;
+    echo "[7] Vis live-data";
+    echo "[8] Tilbage til hovedmenu"
+    echo "";
+    echo -e "\033[1m ===================================== \033[0m" ;
+    echo -n "Indtast oensket menu [1-8]: " ; echo "";
+}
+
+gemDatahistorik()
+{
+    clear
+    echo -e "\033[1m ------------------------------------- \033[0m"
+    echo -e "\033[1m Gem datahistorik \033[0m"
+    echo -e "\033[1m ------------------------------------- \033[0m"
+    echo -e "[1] Gem data \033[0m"
+    echo -e "[2] Tilbage til hovedmenu \033[0m"
+    echo -e "\033[1m ===================================== \033[0m"
+    echo -n "Indtast oensket menu [1-2]: " ; echo "";
+}

@@ -1,0 +1,20 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{2857B73E-F847-4B02-9238-064979017E93}") = "file_client", "file_client.cproj", "{147AA02D-BF88-44A4-85C7-4702CC00A3DD}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{147AA02D-BF88-44A4-85C7-4702CC00A3DD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{147AA02D-BF88-44A4-85C7-4702CC00A3DD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{147AA02D-BF88-44A4-85C7-4702CC00A3DD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{147AA02D-BF88-44A4-85C7-4702CC00A3DD}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(MonoDevelopProperties) = preSolution
+		StartupItem = file_client.cproj
+	EndGlobalSection
+EndGlobal

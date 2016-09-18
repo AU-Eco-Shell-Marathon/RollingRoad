@@ -1,0 +1,5 @@
+Name: LIB
+Description: 
+Version: 0.1
+Libs: -L"/root/Desktop/Exercise_8_client_c++/LIB/bin/Debug" -l
+Cflags: -I"/root/Desktop/Exercise_8_client_c++/LIB"
